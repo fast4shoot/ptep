@@ -1,0 +1,10 @@
+{
+	"name": "shadery",
+	"description": "Random shit appka",
+	"authors": ["Faggot Faggotovič"],
+	"license": "GPL-2.0",
+	"dependencies": {
+		"derelict-sdl2": ">=1.2.7",
+		"derelict-gl3": ">=1.0.6"
+	}
+}
