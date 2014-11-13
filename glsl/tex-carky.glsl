@@ -1,23 +1,18 @@
 #version 330
 
-
-in vec3 vertPos;
-in vec3 vertColour;
-
-out vec4 outputColor;
-
 float PI = 3.14159265358979323846264;
 float FREKVENCE = 10.0f;
-
 
 float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-void main()
+vec4 getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {
-	float u = vertPos.x;
-	float v = vertPos.y;
+	uv *= 16;
+	
+	float u = uv.x;
+	float v = uv.y;
 
 	float ucol = 
 		clamp(sin(u * 10.0f) * 10.0f + 0.5f, 0.0f, 1.0f);
@@ -45,11 +40,11 @@ void main()
 
 	float gray = abs(ucol - vcol) * 0.8 + 0.2;
 	
-	gray *= vec3(rand(vertPos.xy)) * 0.2 + 0.8;	
+	gray *= vec3(rand(uv)) * 0.2 + 0.8;	
 	vec3 barva = mix(carky, gray * vec3(0.6f, 0.7f, 1.0f), 1 - carkyMaska);
 	
 
-	gl_FragColor = vec4(
+	return vec4(
 		barva,
 		1.0f);
 }

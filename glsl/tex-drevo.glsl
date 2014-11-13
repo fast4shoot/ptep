@@ -1,10 +1,5 @@
 #version 330
 
-in vec3 vertPos;
-in vec3 vertColour;
-
-out vec4 outputColor;
-
 float PI = 3.14159265358979323846264;
 float FREKVENCE = 10.0f;
 vec3 drevo = vec3(0.45, 0.227, 0.106);
@@ -13,22 +8,10 @@ float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec3 getColorForPoint(vec2 uv);
-
-void main()
+vec4 getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {
-	float x = 4 * (vertPos.x * 0.5f + 0.5f) - 2f;
-	float y = 4 * (vertPos.y * 0.5f + 0.5f) - 2f;
-	vec2 xy = vec2(x, y);
-	vec2 uv = xy; //vec2(x - y * y, x + y - pow(x, 2));
-
-	gl_FragColor = vec4(
-		getColorForPoint(uv),
-		1.0f);
-}
-
-vec3 getColorForPoint(vec2 uv)
-{
+	uv *= 16;
+	
 	float u = uv.x;
 	float v = uv.y;
 	
@@ -62,5 +45,5 @@ vec3 getColorForPoint(vec2 uv)
 	
 	vec3 barva = sum * svetlo * svisleCary * rozdeleni * modBarvy * mix(drevo, drevo * 0.9, maskaSuku);
 	
-	return barva * 1.2;
+	return vec4(barva * 1.2, 1.0);
 }

@@ -1,10 +1,5 @@
 #version 330
 
-in vec3 vertPos;
-in vec3 vertColour;
-
-out vec4 outputColor;
-
 float PI = 3.14159265358979323846264;
 float FREKVENCE = 10.0f;
 vec3 drevo = vec3(0.45, 0.227, 0.106);
@@ -23,25 +18,11 @@ float psin(float x)
 	return sin(x) * 0.5 + 0.5;
 }
 
-vec3 getColorForPoint(vec2 uv);
-
-void main()
-{
-	float x = (vertPos.x * 0.5f + 0.5f);
-	float y = (vertPos.y * 0.5f + 0.5f);
-	vec2 xy = vec2(x, y);
-	vec2 uv = xy;
-
-	gl_FragColor = vec4(
-		getColorForPoint(uv),
-		1.0f);
-}
-
 float KONEC_COCKY = 0.3;
 float KONEC_DUHOVKY = 0.7;
 float OKRAJ = 0.01;
 
-vec3 getColorForPoint(vec2 uv)
+vec4 getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {	
 	uv = uv - vec2(0.5, 0.5);
 
@@ -65,5 +46,5 @@ vec3 getColorForPoint(vec2 uv)
 		barvaBelima,
 		smoothstep(KONEC_DUHOVKY - OKRAJ, KONEC_DUHOVKY + OKRAJ, dist));  
 	
-	return barva;
+	return vec4(barva, 1.0f);
 }
