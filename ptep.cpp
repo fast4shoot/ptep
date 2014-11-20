@@ -1,48 +1,84 @@
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <SDL2/SDL.h>
+#include <algorithm>
 #include <exception>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <cstddef>
+#include <cstdint>
 #include <vector>
 #include <fstream>
 #include <limits>
+#include <type_traits>
+
+#include <GL/glew.h>
+#include <GL/gl.h>
+
+#include <SDL2/SDL.h>
+
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h> 
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp>
 
 struct Vertex
 {
-	Vertex(float x, float y, float z, float nx, float ny, float nz, float u, float v)
+	Vertex(
+		float x, float y, float z, 
+		float nx, float ny, float nz, 
+		float tanx, float tany, float tanz, 
+		float bitanx, float bitany, float bitanz,
+		float u, float v):
+		_x(x),
+		_y(y),
+		_z(z),
+		
+		_nx(conv<decltype(_nx)>(nx)),
+		_ny(conv<decltype(_ny)>(ny)),
+		_nz(conv<decltype(_nz)>(nz)),
+		
+		_tanx(conv<decltype(_tanx)>(tanx)),
+		_tany(conv<decltype(_tany)>(tany)),
+		_tanz(conv<decltype(_tanz)>(tanz)),
+		
+		_bitanx(conv<decltype(_bitanx)>(bitanx)),
+		_bitany(conv<decltype(_bitany)>(bitany)),
+		_bitanz(conv<decltype(_bitanz)>(bitanz)),
+		
+		_u(conv<decltype(_u)>(u)),
+		_v(conv<decltype(_v)>(v))
+	{}
+	
+	template<typename TDst>
+	static TDst conv(float in)
 	{
-		_x = x;
-		_y = y;
-		_z = z;
-		_w = 1.0;
-		
-		_nx = nx;
-		_ny = ny;
-		_nz = nz;
-		
-		_u = short(u * (std::numeric_limits<short>::max() + 1));
-		_v = short(v * (std::numeric_limits<short>::max() + 1));
+		in = std::max(std::is_unsigned<TDst>::value ? 0.0f : -1.0f, std::min(1.0f, in));
+		return TDst(in * (std::numeric_limits<TDst>::max()));
 	}
 	
 	float _x;
 	float _y;
 	float _z;
-	float _w;
 	
-	float _nx;
-	float _ny;
-	float _nz;
-	short _u;
-	short _v;
+	GLushort _u;
+	GLushort _v;
+	
+	GLshort _nx;
+	GLshort _ny;
+	GLshort _nz;
+	GLshort _pad0;
+	
+	GLbyte _tanx;
+	GLbyte _tany;
+	GLbyte _tanz;	
+	GLbyte _pad1;
+	
+	GLbyte _bitanx;
+	GLbyte _bitany;
+	GLbyte _bitanz;	
+	GLbyte _pad2;
 };
 
 static_assert(sizeof(Vertex) == 32, "Vertex nemá velikost 32");
@@ -194,7 +230,7 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 	assert (indices.size() == 0);
 	
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices);
+	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace );
 	if (!scene)
 	{
 		throw std::runtime_error("Nepodařilo se přečíst model");		
@@ -207,13 +243,23 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 	
 	const aiMesh* mesh = scene->mMeshes[0];
 	
-	if (!mesh->HasFaces() 
-		|| !mesh->HasPositions() 
-		|| !mesh->HasNormals() 
-		|| !mesh->HasTextureCoords(0) 
-		|| mesh->GetNumUVChannels() != 1 )
+	if (!mesh->HasFaces())
+		throw std::runtime_error("Mesh musí mít facy");
+		
+	if (!mesh->HasPositions())
+		throw std::runtime_error("Mesh musí mít pozice");
+		
+	if (!mesh->HasNormals())
+		throw std::runtime_error("Mesh musí mít normály");
+		
+	if (!mesh->HasTextureCoords(0))
+		throw std::runtime_error("Mesh musí mít tex coordy");
+		
+	if (mesh->GetNumUVChannels() != 1)
 	{
-		throw std::runtime_error("Mesh musí mít facy, pozice, normály a jeden tex coord na vertex");
+		std::stringstream ss;
+		ss << "Mesh musí mít jeden UV kanál, ne " << mesh->GetNumUVChannels() << " kanálů";
+		throw std::runtime_error(ss.str());
 	}
 	
 	vertices.reserve(mesh->mNumVertices);
@@ -223,7 +269,10 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 	{
 		aiVector3D position = mesh->mVertices[i];
 		aiVector3D normal = mesh->mNormals[i];
+		aiVector3D tangent = mesh->mTangents[i];
+		aiVector3D bitangent = mesh->mBitangents[i];
 		aiVector3D uvw = mesh->mTextureCoords[0][i];
+		
 		
 		vertices.push_back(Vertex(
 			position.x, 
@@ -232,6 +281,12 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 			normal.x, 
 			normal.y, 
 			normal.z,
+			tangent.x,
+			tangent.y,
+			tangent.z,
+			bitangent.x,
+			bitangent.y,
+			bitangent.z,
 			uvw.x,
 			uvw.y));
 	}
@@ -307,6 +362,7 @@ int main(int argc, char** argv)
 	
 	std::cout << "Vstupujeme do hlavní smyčky" << std::endl;
 	
+	float modelRoty = 0.0f;
 	float roty = 0.0f;
 	float rotx = 1.0f;
 	float dist = -3.0f;
@@ -314,9 +370,15 @@ int main(int argc, char** argv)
 	GLuint program = 0;
 	std::string lastProgramSource;
 	
+	unsigned lastTicks = SDL_GetTicks();
+	
 	auto run = true;
 	while (run)
 	{
+		auto ticks = SDL_GetTicks();
+		modelRoty += 0.0002 * (ticks - lastTicks);
+		lastTicks = ticks;
+		
 		SDL_Event event;
 		while (SDL_PollEvent(&event)) 
 		{
@@ -380,39 +442,54 @@ int main(int argc, char** argv)
 			{
 				GLCALL(glUseProgram, program);
 			
-				auto mvpLocation = GLCALL(glGetUniformLocation, program, "mvp");
-				if (mvpLocation != -1)
+				auto projection = glm::perspective(90.0f, float(windowWidth) / float(windowHeight), 0.1f, 100.0f );
+				auto view = glm::rotate(
+					glm::rotate(
+						glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist)),
+						rotx,
+						glm::vec3(1.0f, 0.0f, 0.0f)
+					),
+					roty, glm::vec3(0.0f, 1.0f, 0.0f)
+				);
+				auto model = glm::rotate(
+					glm::mat4(1.0f),
+					modelRoty, glm::vec3(0.0f, 1.0f, 0.0f)
+				);
+			
+				auto mvLocation = GLCALL(glGetUniformLocation, program, "mvMat");
+				auto pLocation = GLCALL(glGetUniformLocation, program, "pMat");
+				
+				auto mvMat = view * model;
+				auto pMat = projection;
+				
+				GLCALL(glUniformMatrix4fv, mvLocation, 1, GL_FALSE, glm::value_ptr(mvMat));
+				GLCALL(glUniformMatrix4fv, pLocation, 1, GL_FALSE, glm::value_ptr(pMat));
+			
+				auto lightPosLocation = GLCALL(glGetUniformLocation, program, "lightPos");
+				if (lightPosLocation != -1)
 				{
-					auto projection = glm::perspective(90.0f, float(windowWidth) / float(windowHeight), 0.1f, 100.0f );
-					auto translation = glm::translate(projection, glm::vec3(0.0f, 0.0f, dist));
-					auto rotation = glm::rotate(
-						glm::rotate(
-							translation,
-							rotx,
-							glm::vec3(1.0f, 0.0f, 0.0f)
-						),
-						roty, glm::vec3(0.0f, 1.0f, 0.0f)
-					);
-					
-					auto mvp = rotation;
-					
-					GLCALL(glUniformMatrix4fv, mvpLocation, 1, GL_FALSE, glm::value_ptr(mvp));
+					auto lightPos = glm::vec4(20.0f, 20.0f, 20.0f, 1.0f);
+					lightPos = view * lightPos;
+					GLCALL(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
 				}
 			
-				GLCALL(glEnableVertexAttribArray, 0);
-				GLCALL(glEnableVertexAttribArray, 1);
-				GLCALL(glEnableVertexAttribArray, 2);
-				GLCALL(glVertexAttribPointer, 0u, 4, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
-				GLCALL(glVertexAttribPointer, 1u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
-				GLCALL(glVertexAttribPointer, 2u, 2, GL_UNSIGNED_SHORT, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
+				for (int i = 0; i < 5; i++)
+					GLCALL(glEnableVertexAttribArray, i);
+					
+				GLCALL(glVertexAttribPointer, 0u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
+				GLCALL(glVertexAttribPointer, 1u, 2, GL_UNSIGNED_SHORT, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
+				GLCALL(glVertexAttribPointer, 2u, 3, GL_SHORT, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
+				GLCALL(glVertexAttribPointer, 3u, 3, GL_BYTE, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
+				GLCALL(glVertexAttribPointer, 4u, 3, GL_BYTE, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _bitanx));
 			
 				GLCALL(glEnable, GL_DEPTH_TEST);
 				
 				GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				GLCALL(glDrawElements, GL_TRIANGLES, (GLsizei) indices.size(), GL_UNSIGNED_INT, nullptr);
-				GLCALL(glDisableVertexAttribArray, 0);
-				GLCALL(glDisableVertexAttribArray, 1);
-				GLCALL(glDisableVertexAttribArray, 2);
+				
+				for (int i = 0; i < 5; i++)
+					GLCALL(glDisableVertexAttribArray, i);
+					
 				GLCALL(glUseProgram, 0);
 			}
 			

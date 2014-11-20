@@ -1,5 +1,14 @@
 #version 330
 
+struct Material
+{
+	vec4 color;
+	vec3 normal;
+	float shininess;
+	float diffuseAmt;
+	float specularAmt;
+};
+
 float PI = 3.14159265358979323846264;
 float FREKVENCE = 10.0f;
 vec3 drevo = vec3(0.45, 0.227, 0.106);
@@ -8,7 +17,7 @@ float rand(vec2 co){
     return fract(sin(dot(co.xy ,vec2(12.9898,78.233))) * 43758.5453);
 }
 
-vec4 getColorForPoint(vec4 position, vec3 normal, vec2 uv)
+Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {
 	uv *= 16;
 	
@@ -16,7 +25,7 @@ vec4 getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	float v = uv.y;
 	
 	float sum = rand(vec2(u,v)) * 0.3f + 0.7f;
-	float svetlo = clamp(pow(cos(u * PI * 10f) * 0.5f + 0.5f, 0.1f) * 1.2, 0f, 1f);
+	float svetlo = clamp(pow(cos(u * PI * FREKVENCE) * 0.5f + 0.5f, 0.1f) * 1.2, 0f, 1f);
 	float svisleCary = (1f - rand(vec2(0, u))) * 0.1f + 1.1f;
 	
 	float segmentaceu = floor((u + 0.1) * 5) * 0.2;
@@ -45,5 +54,14 @@ vec4 getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	
 	vec3 barva = sum * svetlo * svisleCary * rozdeleni * modBarvy * mix(drevo, drevo * 0.9, maskaSuku);
 	
-	return vec4(barva * 1.2, 1.0);
+	float horizontalniNormala = -(pow(abs(cos(u * PI * FREKVENCE * 0.5)), 0.5) - 1) * sign(sin(u * PI * FREKVENCE));
+	
+	Material ret;
+	ret.color = vec4(barva * 1.2, 1.0);
+	ret.normal = vec3(horizontalniNormala * 0.5, 0.0, 1.0);
+	ret.shininess = 30.0;
+	ret.diffuseAmt = 1.0;
+	ret.specularAmt = 1.3;
+	
+	return ret;
 }
