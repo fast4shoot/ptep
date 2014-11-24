@@ -180,6 +180,10 @@ GLuint createShaderFromFile(const std::string& filename, GLenum type)
 
 GLuint createProgram(const std::string& textureShaderSource)
 {
+	static std::string headersSource = readFile("glsl/headers.glsl");
+	
+	auto modifiedTextureShaderSource = "#version 330\n" + headersSource + "#line 1\n" + textureShaderSource;
+	
 	std::vector<GLuint> shaders;
 	try
 	{
@@ -187,8 +191,9 @@ GLuint createProgram(const std::string& textureShaderSource)
 		shaders.push_back(createShaderFromFile("glsl/noise2D.glsl", GL_FRAGMENT_SHADER));
 		shaders.push_back(createShaderFromFile("glsl/noise3D.glsl", GL_FRAGMENT_SHADER));
 		shaders.push_back(createShaderFromFile("glsl/noise4D.glsl", GL_FRAGMENT_SHADER));
+		shaders.push_back(createShaderFromFile("glsl/noiseFuncs.glsl", GL_FRAGMENT_SHADER));
 		shaders.push_back(createShaderFromFile("glsl/fragCore.glsl", GL_FRAGMENT_SHADER));
-		shaders.push_back(createShaderFromSource(textureShaderSource, GL_FRAGMENT_SHADER));	
+		shaders.push_back(createShaderFromSource(modifiedTextureShaderSource, GL_FRAGMENT_SHADER));	
 	
 		auto program = GLCALL(glCreateProgram);
 		for (auto shader : shaders)

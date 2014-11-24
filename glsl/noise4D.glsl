@@ -9,42 +9,13 @@
 //               https://github.com/ashima/webgl-noise
 // 
 
-vec4 mod289(vec4 x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0; }
-
-float mod289(float x) {
-  return x - floor(x * (1.0 / 289.0)) * 289.0; }
-
-vec4 permute(vec4 x) {
-     return mod289(((x*34.0)+1.0)*x);
-}
-
-float permute(float x) {
-     return mod289(((x*34.0)+1.0)*x);
-}
-
-vec4 taylorInvSqrt(vec4 r)
-{
-  return 1.79284291400159 - 0.85373472095314 * r;
-}
-
-float taylorInvSqrt(float r)
-{
-  return 1.79284291400159 - 0.85373472095314 * r;
-}
-
-vec4 grad4(float j, vec4 ip)
-  {
-  const vec4 ones = vec4(1.0, 1.0, 1.0, -1.0);
-  vec4 p,s;
-
-  p.xyz = floor( fract (vec3(j) * ip.xyz) * 7.0) * ip.z - 1.0;
-  p.w = 1.5 - dot(abs(p.xyz), ones.xyz);
-  s = vec4(lessThan(p, vec4(0.0)));
-  p.xyz = p.xyz + (s.xyz*2.0 - 1.0) * s.www; 
-
-  return p;
-  }
+vec4 mod289(vec4 x);
+float mod289(float x);
+vec4 permute(vec4 x);
+float permute(float x);
+vec4 taylorInvSqrt(vec4 r);
+float taylorInvSqrt(float r);
+vec4 grad4(float j, vec4 ip);
 						
 // (sqrt(5) - 1)/4 = F4, used once below
 #define F4 0.309016994374947451
