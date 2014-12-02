@@ -78,36 +78,6 @@ struct Vertex
 
 static_assert(sizeof(Vertex) == 64, "Vertex nemá velikost 64B");
 
-struct VectorVertex
-{
-	Vertex(
-		float x, float y, float z, 
-		float r, float g, float b):
-		_x(x),
-		_y(y),
-		_z(z),
-		
-		_r(conv<decltype(_r)>(r)),
-		_g(conv<decltype(_g)>(g)),
-		_b(conv<decltype(_b)>(b))
-	{}
-	
-	template<typename TDst>
-	static TDst conv(float in)
-	{
-		in = std::max(std::is_unsigned<TDst>::value ? 0.0f : -1.0f, std::min(1.0f, in));
-		return TDst(in * (std::numeric_limits<TDst>::max()));
-	}
-	
-	float _x;
-	float _y;
-	float _z;
-	GLubyte _r;
-	GLubyte _g;
-	GLubyte _b;
-	GLubyte _pad;
-};
-
 glm::vec3 aiToGlm(const aiVector3D& vector)
 {
 	return glm::vec3(vector.x, vector.y, vector.z);
@@ -262,14 +232,10 @@ GLuint createProgram(const std::string& textureShaderSource)
 void loadModel(
 	const std::string& filename, 
 	std::vector<Vertex>& vertices, 
-	std::vector<GLuint>& indices, 
-	std::vector<VectorVertex>& vectorVertices,
-	std::vector<GLuint>& vectorIndices)
+	std::vector<GLuint>& indices)
 {
 	assert (vertices.size() == 0);
 	assert (indices.size() == 0);
-	assert (vectorVertices.size() == 0);
-	assert (vectorIndices.size() == 0);
 	
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace );
