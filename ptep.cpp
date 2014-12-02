@@ -141,7 +141,7 @@ std::string readFile(const std::string& filename)
 
 GLuint createShaderFromSource(const std::string& source, GLenum type, const std::string& filename = "")
 {
-	auto sourcePtr = (GLchar*) source.data();
+	auto sourcePtr = (const GLchar*) source.data();
 	auto sourceLength = (GLint) source.size();
 	
 	auto shader = glCall(glCreateShader, type);
