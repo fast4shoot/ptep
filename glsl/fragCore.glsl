@@ -6,7 +6,7 @@ in vec4 varPosition;
 in vec2 varTexCoord;
 in vec3 varNormal;
 in vec3 varTangent;
-in vec3 varBitangent;
+in float varTanHandedness;
 
 out vec4 outColor;
 
@@ -25,7 +25,11 @@ void main()
 {
 	Material material = getColorForPoint(varPosition, varNormal, varTexCoord);
 	
-	mat3 tangentSpace = mat3(normalize(varTangent), normalize(varBitangent), normalize(varNormal));
+	vec3 normNormal = normalize(varNormal);
+	vec3 normTangent = normalize(varTangent);// * varTanHandedness);
+	float normTanHandedness = sign(varTanHandedness);
+	vec3 normBitangent = cross(varNormal, varTangent.xyz) * normTanHandedness;
+	mat3 tangentSpace = mat3(normTangent, normBitangent, normNormal);
 	vec3 modifiedNormal = tangentSpace * normalize(material.normal);
 	
 	vec3 eyeVec = normalize(-varPosition.xyz);
@@ -40,4 +44,8 @@ void main()
 	
 	outColor = vec4(material.color.rgb * light, material.color.a);
 	//outColor = vec4(modifiedNormal * 0.5 + vec3(0.5), material.color.a);
+    //outColor = vec4(varNormal * 0.5 + vec3(0.5), material.color.a);
+    //outColor = vec4(normTangent * 0.5 + vec3(0.5), material.color.a);// * varTanHandedness;
+    //outColor = vec4(normBitangent * 0.5 + vec3(0.5), material.color.a);
+	//outColor = vec4((cross(varTangent, varNormal) - varBitangent) * 0.5 + vec3(0.5), material.color.a);
 }

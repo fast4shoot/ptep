@@ -32,7 +32,7 @@ float rand(vec2 co){
 
 Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {
-	uv *= 16;
+	uv *= 12;
 	
 	float u = uv.x;
 	float v = uv.y;
@@ -63,10 +63,10 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	float maskaSuku = (1f - step(0.01 * velikostSuku + rand(uv) * 0.02, vzdalenostSuku)) * step(0.5f, rand(vec2(segmentaceu, svislySegment * 9846)));
 	vec3 barvaSuku = vec3(0.5, 0.23, 0.08) * 0.85f;
 	
-	vec3 barva = /*sum * /*svetlo **/ svisleCary /** rozdeleni*/ * modBarvy * mix(drevo, drevo * 0.9, maskaSuku);
+	vec3 barva = svisleCary * modBarvy * mix(drevo, drevo * 0.9, maskaSuku);
 	
 	float horizontalniNormalaUhel = generujUhelNormaly(u * FREKVENCE);
-	horizontalniNormalaUhel += snoise(uv * vec2(50.0, 0.5) + vec2(0.0, segmentaceu)) * 0.30;
+	horizontalniNormalaUhel += snoise(uv * vec2(50.0, 0.1) + vec2(0.0, kteryDrevo * 15.0)) * 0.25;
 	vec3 normala = vec3(0.0, 0.0, 1.0);
 	normala = rotationMatrix(vec3(0.0, -1.0, 0.0), clamp(horizontalniNormalaUhel * 0.4, -0.5, 0.5) * PI) * normala;
 	
@@ -78,9 +78,9 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	Material ret;
 	ret.color = vec4(barva * 1.2, 1.0);//  * abs(vertikalniNormalaUhel);
 	ret.normal = normala;
-	ret.shininess = 30.0;
+	ret.shininess = 3.0;
 	ret.diffuseAmt = 1.0;
-	ret.specularAmt = 1.3;
+	ret.specularAmt = 0.9;
 	
 	return ret;
 }

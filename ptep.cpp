@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <vector>
@@ -22,33 +23,73 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
+
+std::ostream& operator<<(std::ostream& stream, const aiVector3D& vec)
+{
+	stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+	return stream;
+}
 
 struct Vertex
 {
 	Vertex(
 		float x, float y, float z, 
 		float nx, float ny, float nz, 
-		float tanx, float tany, float tanz, 
-		float bitanx, float bitany, float bitanz,
+		float tanx, float tany, float tanz, float tanHandedness,
 		float u, float v):
 		_x(x),
 		_y(y),
 		_z(z),
 		
-		_nx(conv<decltype(_nx)>(nx)),
-		_ny(conv<decltype(_ny)>(ny)),
-		_nz(conv<decltype(_nz)>(nz)),
+		_nx(nx),
+		_ny(ny),
+		_nz(nz),
 		
-		_tanx(conv<decltype(_tanx)>(tanx)),
-		_tany(conv<decltype(_tany)>(tany)),
-		_tanz(conv<decltype(_tanz)>(tanz)),
+		_tanx(tanx),
+		_tany(tany),
+		_tanz(tanz),
+		_tanHandedness(tanHandedness),
 		
-		_bitanx(conv<decltype(_bitanx)>(bitanx)),
-		_bitany(conv<decltype(_bitany)>(bitany)),
-		_bitanz(conv<decltype(_bitanz)>(bitanz)),
+		_u(u),
+		_v(v)
+	{}
+
+	float _x;
+	float _y;
+	float _z;
+	float _pad0;
+	
+	float _u;
+	float _v;
+	float _pad1;
+	float _pad2;
+	
+	float _nx;
+	float _ny;
+	float _nz;
+	float _pad3;
+	
+	float _tanx;
+	float _tany;
+	float _tanz;
+	float _tanHandedness;
+};
+
+static_assert(sizeof(Vertex) == 64, "Vertex nemá velikost 64B");
+
+struct VectorVertex
+{
+	Vertex(
+		float x, float y, float z, 
+		float r, float g, float b):
+		_x(x),
+		_y(y),
+		_z(z),
 		
-		_u(conv<decltype(_u)>(u)),
-		_v(conv<decltype(_v)>(v))
+		_r(conv<decltype(_r)>(r)),
+		_g(conv<decltype(_g)>(g)),
+		_b(conv<decltype(_b)>(b))
 	{}
 	
 	template<typename TDst>
@@ -61,27 +102,16 @@ struct Vertex
 	float _x;
 	float _y;
 	float _z;
-	
-	GLushort _u;
-	GLushort _v;
-	
-	GLshort _nx;
-	GLshort _ny;
-	GLshort _nz;
-	GLshort _pad0;
-	
-	GLbyte _tanx;
-	GLbyte _tany;
-	GLbyte _tanz;	
-	GLbyte _pad1;
-	
-	GLbyte _bitanx;
-	GLbyte _bitany;
-	GLbyte _bitanz;	
-	GLbyte _pad2;
+	GLubyte _r;
+	GLubyte _g;
+	GLubyte _b;
+	GLubyte _pad;
 };
 
-static_assert(sizeof(Vertex) == 32, "Vertex nemá velikost 32");
+glm::vec3 aiToGlm(const aiVector3D& vector)
+{
+	return glm::vec3(vector.x, vector.y, vector.z);
+}
 
 const char* glErrorToString(GLenum err)
 {
@@ -229,10 +259,17 @@ GLuint createProgram(const std::string& textureShaderSource)
 	}
 }
 
-void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::vector<GLuint>& indices)
+void loadModel(
+	const std::string& filename, 
+	std::vector<Vertex>& vertices, 
+	std::vector<GLuint>& indices, 
+	std::vector<VectorVertex>& vectorVertices,
+	std::vector<GLuint>& vectorIndices)
 {
 	assert (vertices.size() == 0);
 	assert (indices.size() == 0);
+	assert (vectorVertices.size() == 0);
+	assert (vectorIndices.size() == 0);
 	
 	Assimp::Importer importer;
 	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace );
@@ -269,16 +306,72 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 	
 	vertices.reserve(mesh->mNumVertices);
 	
+	// vypocitame tangenty
+	
+	std::vector<glm::vec3> vertTangents(mesh->mNumVertices, glm::vec3(0.0f));
+	std::vector<glm::vec3> vertBitangents(mesh->mNumVertices, glm::vec3(0.0f));
+	std::vector<unsigned> vertTangentCounts(mesh->mNumVertices, 0);
+	for (unsigned i = 0; i < mesh->mNumFaces; i++)
+	{
+		auto face = mesh->mFaces[i];
+		
+		if (face.mNumIndices != 3)
+		{
+			throw std::runtime_error("Jsou podporovány pouze facy se třemi body");
+		}
+		
+		auto p0idx = face.mIndices[0];
+		auto p1idx = face.mIndices[1];
+		auto p2idx = face.mIndices[2];
+		
+		auto p0 = glm::vec3(aiToGlm(mesh->mVertices[p0idx]));
+		auto p1 = glm::vec3(aiToGlm(mesh->mVertices[p1idx]));
+		auto p2 = glm::vec3(aiToGlm(mesh->mVertices[p2idx]));
+		
+		auto uv0 = glm::vec2(aiToGlm(mesh->mTextureCoords[0][p0idx]));
+		auto uv1 = glm::vec2(aiToGlm(mesh->mTextureCoords[0][p1idx]));
+		auto uv2 = glm::vec2(aiToGlm(mesh->mTextureCoords[0][p2idx]));
+		
+		auto q1 = p1 - p0;
+		auto q2 = p2 - p0;
+		
+		auto st1 = uv1 - uv0;
+		auto st2 = uv2 - uv0;
+		
+		auto r = 1.0f / (st1.x * st2.y - st1.y * st2.x);
+        auto tangent = glm::normalize((q1 * st2.y - q2 * st1.y) * r);
+        auto bitangent = (q2 * st1.x - q1 * st2.x)*r;
+		
+		vertTangents[p0idx] += tangent;
+		vertTangents[p1idx] += tangent;
+		vertTangents[p2idx] += tangent;
+		
+		vertBitangents[p0idx] += bitangent;
+		vertBitangents[p1idx] += bitangent;
+		vertBitangents[p2idx] += bitangent;
+		
+		vertTangentCounts[p0idx] += 1;
+		vertTangentCounts[p1idx] += 1;
+		vertTangentCounts[p2idx] += 1;
+	}
+	
+	
 	// Prevedeme vertexy
 	for (unsigned i = 0; i < mesh->mNumVertices; i++)
 	{
-		aiVector3D position = mesh->mVertices[i];
-		aiVector3D normal = mesh->mNormals[i];
-		aiVector3D tangent = mesh->mTangents[i];
-		aiVector3D bitangent = mesh->mBitangents[i];
-		aiVector3D uvw = mesh->mTextureCoords[0][i];
+		auto position = mesh->mVertices[i];
+		auto normal = aiToGlm(mesh->mNormals[i]);
+		auto tangent = aiToGlm(mesh->mTangents[i]);
+		auto bitangent = aiToGlm(mesh->mBitangents[i]);
+		auto uvw = mesh->mTextureCoords[0][i];
 		
+		auto tangentCount = vertTangentCounts[i];
+		assert (tangentCount != 0);
 		
+		//~ auto tangent = vertTangents[i] / float(tangentCount);
+		//~ auto bitangent = vertBitangents[i] / float(tangentCount);
+		auto tanHandedness = glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f ? -1.0f : 1.0f;
+		//auto tanHandedness = 1.0f;
 		vertices.push_back(Vertex(
 			position.x, 
 			position.y, 
@@ -289,9 +382,7 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 			tangent.x,
 			tangent.y,
 			tangent.z,
-			bitangent.x,
-			bitangent.y,
-			bitangent.z,
+			tanHandedness,
 			uvw.x,
 			uvw.y));
 	}
@@ -313,13 +404,15 @@ void loadModel(const std::string& filename, std::vector<Vertex>& vertices, std::
 			indices.push_back(face.mIndices[j]);
 		}
 	}
+	
+	//prevedeme vertexy vektoru (normaly, tangenty, bitangenty)
 }
 
 int main(int argc, char** argv)
 {
-	if (argc != 2)
+	if (argc != 3)
 	{
-		throw std::runtime_error("Nesprávný počet parametrů. Správné použité je: \nptep <shader s texturou>");
+		throw std::runtime_error("Nesprávný počet parametrů. Správné použité je: \nptep <shader s texturou> <model>");
 	}
 	
 	SDL_Init(SDL_INIT_VIDEO);
@@ -346,7 +439,7 @@ int main(int argc, char** argv)
 	}
 	std::cout << "Jedeme: " << glewGetString(GLEW_VERSION) << std::endl;
 	
-	std::string modelFilename = "models/teapot.obj";
+	std::string modelFilename = argv[2];
 	std::cout << "Loadujeme model " << modelFilename << std::endl;
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
@@ -377,11 +470,13 @@ int main(int argc, char** argv)
 	
 	unsigned lastTicks = SDL_GetTicks();
 	
+	bool rotate = true;
+	
 	auto run = true;
 	while (run)
 	{
 		auto ticks = SDL_GetTicks();
-		modelRoty += 0.0002 * (ticks - lastTicks);
+		modelRoty += rotate ? 0.0002 * (ticks - lastTicks) : 0.0;
 		lastTicks = ticks;
 		
 		SDL_Event event;
@@ -423,6 +518,12 @@ int main(int argc, char** argv)
 					dist += event.wheel.y * 0.1f;
 					break;
 					
+				case SDL_KEYDOWN:
+					if (event.key.keysym.sym == SDLK_r)
+						rotate = !rotate;
+					
+					break;
+				
 				default: 
 					break;
 			 }
@@ -431,7 +532,7 @@ int main(int argc, char** argv)
 		try
 		{
 			auto programSource = readFile(argv[1]);
-			if (programSource != lastProgramSource)
+			if (programSource != lastProgramSource || true)
 			{
 				if (program != 0)
 				{
@@ -481,13 +582,18 @@ int main(int argc, char** argv)
 				for (int i = 0; i < 5; i++)
 					GLCALL(glEnableVertexAttribArray, i);
 					
+				// pozice
 				GLCALL(glVertexAttribPointer, 0u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
-				GLCALL(glVertexAttribPointer, 1u, 2, GL_UNSIGNED_SHORT, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
-				GLCALL(glVertexAttribPointer, 2u, 3, GL_SHORT, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
-				GLCALL(glVertexAttribPointer, 3u, 3, GL_BYTE, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
-				GLCALL(glVertexAttribPointer, 4u, 3, GL_BYTE, GL_TRUE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _bitanx));
+				// texcoord
+				GLCALL(glVertexAttribPointer, 1u, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
+				// normala
+				GLCALL(glVertexAttribPointer, 2u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
+				// tangent
+				GLCALL(glVertexAttribPointer, 3u, 4, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
 			
 				GLCALL(glEnable, GL_DEPTH_TEST);
+				GLCALL(glEnable, GL_CULL_FACE);
+				GLCALL(glCullFace, GL_BACK);
 				
 				GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 				GLCALL(glDrawElements, GL_TRIANGLES, (GLsizei) indices.size(), GL_UNSIGNED_INT, nullptr);
