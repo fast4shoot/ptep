@@ -4,6 +4,6 @@ LDLIBS += -lGLEW -lGL -lSDL2 -lassimp
 default: ptep
 
 ptep: ptep.o
-	$(CXX) $(CXXFLAGS) $^ -o $@ $(LDLIBS)
+	$(CXX) -g $(CXXFLAGS) $^ -o $@ $(LDLIBS)
 
 $PHONY: default

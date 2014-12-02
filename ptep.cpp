@@ -268,7 +268,7 @@ void loadModel(
 	
 	// vypocitame tangenty
 	
-	std::vector<glm::vec3> vertTangents(mesh->mNumVertices, glm::vec3(0.0f));
+	/*std::vector<glm::vec3> vertTangents(mesh->mNumVertices, glm::vec3(0.0f));
 	std::vector<glm::vec3> vertBitangents(mesh->mNumVertices, glm::vec3(0.0f));
 	std::vector<unsigned> vertTangentCounts(mesh->mNumVertices, 0);
 	for (unsigned i = 0; i < mesh->mNumFaces; i++)
@@ -313,7 +313,7 @@ void loadModel(
 		vertTangentCounts[p0idx] += 1;
 		vertTangentCounts[p1idx] += 1;
 		vertTangentCounts[p2idx] += 1;
-	}
+	}*/
 	
 	
 	// Prevedeme vertexy
@@ -325,8 +325,8 @@ void loadModel(
 		auto bitangent = aiToGlm(mesh->mBitangents[i]);
 		auto uvw = mesh->mTextureCoords[0][i];
 		
-		auto tangentCount = vertTangentCounts[i];
-		assert (tangentCount != 0);
+		//auto tangentCount = vertTangentCounts[i];
+		//assert (tangentCount != 0);
 		
 		//~ auto tangent = vertTangents[i] / float(tangentCount);
 		//~ auto bitangent = vertBitangents[i] / float(tangentCount);
