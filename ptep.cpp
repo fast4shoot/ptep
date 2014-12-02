@@ -266,56 +266,6 @@ void loadModel(
 	
 	vertices.reserve(mesh->mNumVertices);
 	
-	// vypocitame tangenty
-	
-	/*std::vector<glm::vec3> vertTangents(mesh->mNumVertices, glm::vec3(0.0f));
-	std::vector<glm::vec3> vertBitangents(mesh->mNumVertices, glm::vec3(0.0f));
-	std::vector<unsigned> vertTangentCounts(mesh->mNumVertices, 0);
-	for (unsigned i = 0; i < mesh->mNumFaces; i++)
-	{
-		auto face = mesh->mFaces[i];
-		
-		if (face.mNumIndices != 3)
-		{
-			throw std::runtime_error("Jsou podporovány pouze facy se třemi body");
-		}
-		
-		auto p0idx = face.mIndices[0];
-		auto p1idx = face.mIndices[1];
-		auto p2idx = face.mIndices[2];
-		
-		auto p0 = glm::vec3(aiToGlm(mesh->mVertices[p0idx]));
-		auto p1 = glm::vec3(aiToGlm(mesh->mVertices[p1idx]));
-		auto p2 = glm::vec3(aiToGlm(mesh->mVertices[p2idx]));
-		
-		auto uv0 = glm::vec2(aiToGlm(mesh->mTextureCoords[0][p0idx]));
-		auto uv1 = glm::vec2(aiToGlm(mesh->mTextureCoords[0][p1idx]));
-		auto uv2 = glm::vec2(aiToGlm(mesh->mTextureCoords[0][p2idx]));
-		
-		auto q1 = p1 - p0;
-		auto q2 = p2 - p0;
-		
-		auto st1 = uv1 - uv0;
-		auto st2 = uv2 - uv0;
-		
-		auto r = 1.0f / (st1.x * st2.y - st1.y * st2.x);
-        auto tangent = glm::normalize((q1 * st2.y - q2 * st1.y) * r);
-        auto bitangent = (q2 * st1.x - q1 * st2.x)*r;
-		
-		vertTangents[p0idx] += tangent;
-		vertTangents[p1idx] += tangent;
-		vertTangents[p2idx] += tangent;
-		
-		vertBitangents[p0idx] += bitangent;
-		vertBitangents[p1idx] += bitangent;
-		vertBitangents[p2idx] += bitangent;
-		
-		vertTangentCounts[p0idx] += 1;
-		vertTangentCounts[p1idx] += 1;
-		vertTangentCounts[p2idx] += 1;
-	}*/
-	
-	
 	// Prevedeme vertexy
 	for (unsigned i = 0; i < mesh->mNumVertices; i++)
 	{
@@ -325,13 +275,7 @@ void loadModel(
 		auto bitangent = aiToGlm(mesh->mBitangents[i]);
 		auto uvw = mesh->mTextureCoords[0][i];
 		
-		//auto tangentCount = vertTangentCounts[i];
-		//assert (tangentCount != 0);
-		
-		//~ auto tangent = vertTangents[i] / float(tangentCount);
-		//~ auto bitangent = vertBitangents[i] / float(tangentCount);
 		auto tanHandedness = glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f ? -1.0f : 1.0f;
-		//auto tanHandedness = 1.0f;
 		vertices.push_back(Vertex(
 			position.x, 
 			position.y, 
