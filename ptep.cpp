@@ -101,13 +101,10 @@ const char* glErrorToString(GLenum err)
 struct GlErrorVerifier
 {
 private:
-	const char* _fName;
 	
 public:
-	GlErrorVerifier(const char* fName)
-	{
-		_fName = fName;
-	}
+	GlErrorVerifier()
+	{}
 
 	~GlErrorVerifier()
 	{
@@ -115,21 +112,18 @@ public:
 		if (err != GL_NO_ERROR)
 		{
 			std::ostringstream stream;
-			stream << "OGL error " << glErrorToString(err) << " in " << _fName;
+			stream << "OGL error " << glErrorToString(err);
 			throw std::runtime_error(stream.str());
 		}
 	}
 };
 
 template<typename F, typename... Args>
-auto glCall(const char* fName, F f, Args&&... args) -> decltype(f(args...))
+auto glCall(F f, Args&&... args) -> decltype(f(args...))
 {
-	auto verifier = GlErrorVerifier(fName);
+	auto verifier = GlErrorVerifier();
 	return f(args...);
 }
-
-#define GET_FIRST(X, ...) #X
-#define GLCALL(...) glCall(GET_FIRST(__VA_ARGS__), __VA_ARGS__)
 
 std::string readFile(const std::string& filename)
 {
@@ -150,19 +144,19 @@ GLuint createShaderFromSource(const std::string& source, GLenum type, const std:
 	auto sourcePtr = (GLchar*) source.data();
 	auto sourceLength = (GLint) source.size();
 	
-	auto shader = GLCALL(glCreateShader, type);
-	GLCALL(glShaderSource,shader, 1, &sourcePtr, &sourceLength);
-	GLCALL(glCompileShader, shader);
+	auto shader = glCall(glCreateShader, type);
+	glCall(glShaderSource,shader, 1, &sourcePtr, &sourceLength);
+	glCall(glCompileShader, shader);
 	
 	GLint compileStatus;
-	GLCALL(glGetShaderiv, shader, GL_COMPILE_STATUS, &compileStatus);
+	glCall(glGetShaderiv, shader, GL_COMPILE_STATUS, &compileStatus);
 	if (compileStatus == GL_FALSE)
 	{
 		GLint infoLogLength;
-		GLCALL(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+		glCall(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &infoLogLength);
 		
 		auto log = std::vector<GLchar>(infoLogLength);
-		GLCALL(glGetShaderInfoLog, shader, infoLogLength, nullptr, log.data());
+		glCall(glGetShaderInfoLog, shader, infoLogLength, nullptr, log.data());
 			
 		auto exStr = "Kompilace shaderu " + filename + " failnula: \n";
 		exStr.append(log.begin(), log.end());
@@ -195,27 +189,27 @@ GLuint createProgram(const std::string& textureShaderSource)
 		shaders.push_back(createShaderFromFile("glsl/fragCore.glsl", GL_FRAGMENT_SHADER));
 		shaders.push_back(createShaderFromSource(modifiedTextureShaderSource, GL_FRAGMENT_SHADER));	
 	
-		auto program = GLCALL(glCreateProgram);
+		auto program = glCall(glCreateProgram);
 		for (auto shader : shaders)
-			GLCALL(glAttachShader, program, shader);
+			glCall(glAttachShader, program, shader);
 		
-		GLCALL(glLinkProgram, program);
+		glCall(glLinkProgram, program);
 		GLint linkStatus;
-		GLCALL(glGetProgramiv, program, GL_LINK_STATUS, &linkStatus);
+		glCall(glGetProgramiv, program, GL_LINK_STATUS, &linkStatus);
 		if (linkStatus == GL_FALSE)
 		{
 			GLint infoLogLength;
-			GLCALL(glGetProgramiv, program, GL_INFO_LOG_LENGTH, &infoLogLength);
+			glCall(glGetProgramiv, program, GL_INFO_LOG_LENGTH, &infoLogLength);
 			
 			auto log = std::vector<GLchar>(infoLogLength);
-			GLCALL(glGetProgramInfoLog, program, infoLogLength, nullptr, log.data());
+			glCall(glGetProgramInfoLog, program, infoLogLength, nullptr, log.data());
 			std::string exStr = "Linkování programu failnulo: \n";
 			exStr.append(log.begin(), log.end());
 			throw std::runtime_error(exStr);
 		}
 		
 		for (auto shader : shaders)
-			GLCALL(glDeleteShader, shader);
+			glCall(glDeleteShader, shader);
 			
 		return program;
 	}
@@ -223,7 +217,7 @@ GLuint createProgram(const std::string& textureShaderSource)
 	{
 		for (auto shader : shaders)
 		{
-			GLCALL(glDeleteShader, shader);
+			glCall(glDeleteShader, shader);
 		}
 		throw;
 	}
@@ -416,13 +410,13 @@ int main(int argc, char** argv)
 	
 	GLuint vbo;
 	GLuint ibo;
-	GLCALL(glGenBuffers, 1, &vbo);
-	GLCALL(glGenBuffers, 1, &ibo);
+	glCall(glGenBuffers, 1, &vbo);
+	glCall(glGenBuffers, 1, &ibo);
 
-	GLCALL(glBindBuffer, GL_ARRAY_BUFFER, vbo);
-	GLCALL(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo);
-	GLCALL(glBufferData, GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
-	GLCALL(glBufferData, GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+	glCall(glBindBuffer, GL_ARRAY_BUFFER, vbo);
+	glCall(glBindBuffer, GL_ELEMENT_ARRAY_BUFFER, ibo);
+	glCall(glBufferData, GL_ARRAY_BUFFER, vertices.size() * sizeof(Vertex), vertices.data(), GL_STATIC_DRAW);
+	glCall(glBufferData, GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 	
 	std::cout << "Vstupujeme do hlavní smyčky" << std::endl;
 	
@@ -460,7 +454,7 @@ int main(int argc, char** argv)
 						case SDL_WINDOWEVENT_RESIZED:
 							windowWidth = event.window.data1;
 							windowHeight = event.window.data2;
-							GLCALL(glViewport, 0, 0, windowWidth, windowHeight);
+							glCall(glViewport, 0, 0, windowWidth, windowHeight);
 							break;
 						default:
 							break;
@@ -512,7 +506,7 @@ int main(int argc, char** argv)
 		
 			if (program != 0)
 			{
-				GLCALL(glUseProgram, program);
+				glCall(glUseProgram, program);
 			
 				auto projection = glm::perspective(90.0f, float(windowWidth) / float(windowHeight), 0.1f, 100.0f );
 				auto view = glm::rotate(
@@ -528,46 +522,46 @@ int main(int argc, char** argv)
 					modelRoty, glm::vec3(0.0f, 1.0f, 0.0f)
 				);
 			
-				auto mvLocation = GLCALL(glGetUniformLocation, program, "mvMat");
-				auto pLocation = GLCALL(glGetUniformLocation, program, "pMat");
+				auto mvLocation = glCall(glGetUniformLocation, program, "mvMat");
+				auto pLocation = glCall(glGetUniformLocation, program, "pMat");
 				
 				auto mvMat = view * model;
 				auto pMat = projection;
 				
-				GLCALL(glUniformMatrix4fv, mvLocation, 1, GL_FALSE, glm::value_ptr(mvMat));
-				GLCALL(glUniformMatrix4fv, pLocation, 1, GL_FALSE, glm::value_ptr(pMat));
+				glCall(glUniformMatrix4fv, mvLocation, 1, GL_FALSE, glm::value_ptr(mvMat));
+				glCall(glUniformMatrix4fv, pLocation, 1, GL_FALSE, glm::value_ptr(pMat));
 			
-				auto lightPosLocation = GLCALL(glGetUniformLocation, program, "lightPos");
+				auto lightPosLocation = glCall(glGetUniformLocation, program, "lightPos");
 				if (lightPosLocation != -1)
 				{
 					auto lightPos = glm::vec4(20.0f, 20.0f, 20.0f, 1.0f);
 					lightPos = view * lightPos;
-					GLCALL(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
+					glCall(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
 				}
 			
 				for (int i = 0; i < 5; i++)
-					GLCALL(glEnableVertexAttribArray, i);
+					glCall(glEnableVertexAttribArray, i);
 					
 				// pozice
-				GLCALL(glVertexAttribPointer, 0u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
+				glCall(glVertexAttribPointer, 0u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
 				// texcoord
-				GLCALL(glVertexAttribPointer, 1u, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
+				glCall(glVertexAttribPointer, 1u, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
 				// normala
-				GLCALL(glVertexAttribPointer, 2u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
+				glCall(glVertexAttribPointer, 2u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
 				// tangent
-				GLCALL(glVertexAttribPointer, 3u, 4, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
+				glCall(glVertexAttribPointer, 3u, 4, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
 			
-				GLCALL(glEnable, GL_DEPTH_TEST);
-				GLCALL(glEnable, GL_CULL_FACE);
-				GLCALL(glCullFace, GL_BACK);
+				glCall(glEnable, GL_DEPTH_TEST);
+				glCall(glEnable, GL_CULL_FACE);
+				glCall(glCullFace, GL_BACK);
 				
-				GLCALL(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				GLCALL(glDrawElements, GL_TRIANGLES, (GLsizei) indices.size(), GL_UNSIGNED_INT, nullptr);
+				glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+				glCall(glDrawElements, GL_TRIANGLES, (GLsizei) indices.size(), GL_UNSIGNED_INT, nullptr);
 				
 				for (int i = 0; i < 5; i++)
-					GLCALL(glDisableVertexAttribArray, i);
+					glCall(glDisableVertexAttribArray, i);
 					
-				GLCALL(glUseProgram, 0);
+				glCall(glUseProgram, 0);
 			}
 			
 			SDL_GL_SwapWindow(window);
@@ -578,8 +572,8 @@ int main(int argc, char** argv)
 		}
 	}
 	
-	GLCALL(glDeleteBuffers, 1, &vbo);
-	GLCALL(glDeleteBuffers, 1, &ibo);
+	glCall(glDeleteBuffers, 1, &vbo);
+	glCall(glDeleteBuffers, 1, &ibo);
 	SDL_GL_DeleteContext(glCtx);
 	SDL_DestroyWindow(window);
 	SDL_Quit();
