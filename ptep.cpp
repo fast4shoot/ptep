@@ -167,27 +167,22 @@ GLuint createShaderFromSource(const std::string& source, GLenum type, const std:
 	return shader;
 }
 
-GLuint createShaderFromFile(const std::string& filename, GLenum type)
+GLuint createProgram(
+	const std::vector<std::string>& vertexShaders, 
+	const std::vector<std::string>& geometryShaders,
+	const std::vector<std::string>& fragmentShaders)
 {
-	return createShaderFromSource(readFile(filename), type, filename);
-}
-
-GLuint createProgram(const std::string& textureShaderSource)
-{
-	static std::string headersSource = readFile("glsl/headers.glsl");
-	
-	auto modifiedTextureShaderSource = "#version 330\n" + headersSource + "#line 1\n" + textureShaderSource;
-	
 	std::vector<GLuint> shaders;
 	try
 	{
-		shaders.push_back(createShaderFromFile("glsl/vert.glsl", GL_VERTEX_SHADER));		
-		shaders.push_back(createShaderFromFile("glsl/noise2D.glsl", GL_FRAGMENT_SHADER));
-		shaders.push_back(createShaderFromFile("glsl/noise3D.glsl", GL_FRAGMENT_SHADER));
-		shaders.push_back(createShaderFromFile("glsl/noise4D.glsl", GL_FRAGMENT_SHADER));
-		shaders.push_back(createShaderFromFile("glsl/noiseFuncs.glsl", GL_FRAGMENT_SHADER));
-		shaders.push_back(createShaderFromFile("glsl/fragCore.glsl", GL_FRAGMENT_SHADER));
-		shaders.push_back(createShaderFromSource(modifiedTextureShaderSource, GL_FRAGMENT_SHADER));	
+		for (auto& source : vertexShaders)
+			shaders.push_back(createShaderFromSource(source, GL_VERTEX_SHADER));
+			
+		for (auto& source : geometryShaders)
+			shaders.push_back(createShaderFromSource(source, GL_GEOMETRY_SHADER));
+			
+		for (auto& source : fragmentShaders)
+			shaders.push_back(createShaderFromSource(source, GL_FRAGMENT_SHADER));
 	
 		auto program = glCall(glCreateProgram);
 		for (auto shader : shaders)
@@ -203,7 +198,7 @@ GLuint createProgram(const std::string& textureShaderSource)
 			
 			auto log = std::vector<GLchar>(infoLogLength);
 			glCall(glGetProgramInfoLog, program, infoLogLength, nullptr, log.data());
-			std::string exStr = "Linkování programu failnulo: \n";
+			std::string exStr = "Linkování programu selhalo: \n";
 			exStr.append(log.begin(), log.end());
 			throw std::runtime_error(exStr);
 		}
@@ -216,11 +211,36 @@ GLuint createProgram(const std::string& textureShaderSource)
 	catch (std::exception& ex)
 	{
 		for (auto shader : shaders)
-		{
 			glCall(glDeleteShader, shader);
-		}
+			
 		throw;
 	}
+}
+
+GLuint createTextureProgram(const std::string& textureShaderSource)
+{
+	static std::string headersSource = readFile("glsl/textureCore/headers.glsl");
+	
+	auto modifiedTextureShaderSource = "#version 330\n" + headersSource + "#line 1\n" + textureShaderSource;
+	
+	std::vector<std::string> vertexShaders;
+	std::vector<std::string> geometryShaders;
+	std::vector<std::string> fragmentShaders;
+	
+	vertexShaders.push_back(readFile("glsl/shared/vert.glsl"));
+	vertexShaders.push_back(readFile("glsl/textureCore/vert.glsl"));
+	
+	fragmentShaders.push_back(readFile("glsl/textureCore/noise2D.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/noise3D.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/noise4D.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/noiseFuncs.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/rotationMatrix.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/positiveTrig.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/rand.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/frag.glsl"));
+	fragmentShaders.push_back(modifiedTextureShaderSource);
+	
+	return createProgram(vertexShaders, geometryShaders, fragmentShaders);
 }
 
 void loadModel(
@@ -275,7 +295,9 @@ void loadModel(
 		auto bitangent = aiToGlm(mesh->mBitangents[i]);
 		auto uvw = mesh->mTextureCoords[0][i];
 		
+		tangent = glm::normalize(tangent - normal * glm::dot(normal, tangent));
 		auto tanHandedness = glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f ? -1.0f : 1.0f;
+		
 		vertices.push_back(Vertex(
 			position.x, 
 			position.y, 
@@ -308,8 +330,6 @@ void loadModel(
 			indices.push_back(face.mIndices[j]);
 		}
 	}
-	
-	//prevedeme vertexy vektoru (normaly, tangenty, bitangenty)
 }
 
 int main(int argc, char** argv)
@@ -369,12 +389,16 @@ int main(int argc, char** argv)
 	float rotx = 1.0f;
 	float dist = -3.0f;
 	
-	GLuint program = 0;
+	GLuint textureProgram = 0;
 	std::string lastProgramSource;
+	
+	GLuint tangentSpaceProgram = 0;
 	
 	unsigned lastTicks = SDL_GetTicks();
 	
 	bool rotate = true;
+	bool showTangent = false;
+	bool loadShaders = true;
 	
 	auto run = true;
 	while (run)
@@ -423,9 +447,13 @@ int main(int argc, char** argv)
 					break;
 					
 				case SDL_KEYDOWN:
-					if (event.key.keysym.sym == SDLK_r)
-						rotate = !rotate;
-					
+					switch (event.key.keysym.sym)
+					{
+						case SDLK_r: rotate = !rotate; break;
+						case SDLK_t: showTangent = !showTangent; break;
+						case SDLK_F5: loadShaders = true; break;
+						
+					}
 					break;
 				
 				default: 
@@ -436,78 +464,135 @@ int main(int argc, char** argv)
 		try
 		{
 			auto programSource = readFile(argv[1]);
-			if (programSource != lastProgramSource || true)
+			if (programSource != lastProgramSource)
 			{
-				if (program != 0)
+				if (textureProgram != 0)
 				{
-					glDeleteProgram(program);
-					program = 0;
+					glDeleteProgram(textureProgram);
+					textureProgram = 0;
 				}
 				
 				lastProgramSource = programSource;
-				program = createProgram(programSource);
+				textureProgram = createTextureProgram(programSource);
 			}
 		
-			if (program != 0)
+			glCall(glEnable, GL_DEPTH_TEST);	
+			glCall(glLineWidth, 2.0f);
+			glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
+			auto projection = glm::perspective(90.0f, float(windowWidth) / float(windowHeight), 0.1f, 100.0f );
+			auto view = glm::rotate(
+				glm::rotate(
+					glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist)),
+					rotx,
+					glm::vec3(1.0f, 0.0f, 0.0f)
+				),
+				roty, glm::vec3(0.0f, 1.0f, 0.0f)
+			);
+			auto model = glm::rotate(
+				glm::mat4(1.0f),
+				modelRoty, glm::vec3(0.0f, 1.0f, 0.0f)
+			);
+		
+			// loadneme shadery, pokud je to treba
+			if (loadShaders)
 			{
-				glCall(glUseProgram, program);
-			
-				auto projection = glm::perspective(90.0f, float(windowWidth) / float(windowHeight), 0.1f, 100.0f );
-				auto view = glm::rotate(
-					glm::rotate(
-						glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, dist)),
-						rotx,
-						glm::vec3(1.0f, 0.0f, 0.0f)
-					),
-					roty, glm::vec3(0.0f, 1.0f, 0.0f)
-				);
-				auto model = glm::rotate(
-					glm::mat4(1.0f),
-					modelRoty, glm::vec3(0.0f, 1.0f, 0.0f)
-				);
-			
-				auto mvLocation = glCall(glGetUniformLocation, program, "mvMat");
-				auto pLocation = glCall(glGetUniformLocation, program, "pMat");
+				std::cout << "Nahráváme shadery" << std::endl;
+				loadShaders = false;
 				
-				auto mvMat = view * model;
-				auto pMat = projection;
-				
-				glCall(glUniformMatrix4fv, mvLocation, 1, GL_FALSE, glm::value_ptr(mvMat));
-				glCall(glUniformMatrix4fv, pLocation, 1, GL_FALSE, glm::value_ptr(pMat));
-			
-				auto lightPosLocation = glCall(glGetUniformLocation, program, "lightPos");
-				if (lightPosLocation != -1)
+				if (textureProgram == 0)					
 				{
-					auto lightPos = glm::vec4(20.0f, 20.0f, 20.0f, 1.0f);
-					lightPos = view * lightPos;
-					glCall(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
+					glCall(glDeleteProgram, textureProgram);
+					textureProgram = 0;
 				}
-			
-				for (int i = 0; i < 5; i++)
-					glCall(glEnableVertexAttribArray, i);
 					
-				// pozice
-				glCall(glVertexAttribPointer, 0u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
-				// texcoord
-				glCall(glVertexAttribPointer, 1u, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
-				// normala
-				glCall(glVertexAttribPointer, 2u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
-				// tangent
-				glCall(glVertexAttribPointer, 3u, 4, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
-			
-				glCall(glEnable, GL_DEPTH_TEST);
-				glCall(glEnable, GL_CULL_FACE);
-				glCall(glCullFace, GL_BACK);
+				if (tangentSpaceProgram == 0)
+				{
+					glCall(glDeleteProgram, textureProgram);
+					tangentSpaceProgram = 0;
+				}
 				
-				glCall(glClear, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-				glCall(glDrawElements, GL_TRIANGLES, (GLsizei) indices.size(), GL_UNSIGNED_INT, nullptr);
+				try
+				{
+					textureProgram = createTextureProgram(readFile(argv[1]));
+				}
+				catch (std::exception& ex)
+				{
+					std::cerr << ex.what() << std::endl;
+				}
 				
-				for (int i = 0; i < 5; i++)
-					glCall(glDisableVertexAttribArray, i);
+				try
+				{
+					std::vector<std::string> vertexShaders;
+					std::vector<std::string> geometryShaders;
+					std::vector<std::string> fragmentShaders;
 					
-				glCall(glUseProgram, 0);
+					vertexShaders.push_back(readFile("glsl/shared/vert.glsl"));
+					vertexShaders.push_back(readFile("glsl/tangentSpace/vert.glsl"));
+					geometryShaders.push_back(readFile("glsl/tangentSpace/geometry.glsl"));
+					fragmentShaders.push_back(readFile("glsl/tangentSpace/fragment.glsl"));
+					
+					tangentSpaceProgram = createProgram(vertexShaders, geometryShaders, fragmentShaders);
+				}
+				catch (std::exception& ex)
+				{
+					std::cerr << ex.what() << std::endl;
+				}
+			}
+		
+			std::vector<GLuint> programs = {textureProgram};
+			if (showTangent)
+			{
+				programs.push_back(tangentSpaceProgram);
 			}
 			
+			for (auto program : programs)
+			{
+				if (program != 0)
+				{
+					glCall(glUseProgram, program);
+				
+					auto mvLocation = glCall(glGetUniformLocation, program, "mvMat");
+					auto mvNormLocation = glCall(glGetUniformLocation, program, "mvNormMat");
+					auto pLocation = glCall(glGetUniformLocation, program, "pMat");
+					
+					auto mvMat = view * model;
+					auto mvNormMat = glm::transpose(glm::inverse(glm::mat3(mvMat)));
+					auto pMat = projection;
+					
+					glCall(glUniformMatrix4fv, mvLocation, 1, GL_FALSE, glm::value_ptr(mvMat));
+					glCall(glUniformMatrix3fv, mvNormLocation, 1, GL_FALSE, glm::value_ptr(mvNormMat));
+					glCall(glUniformMatrix4fv, pLocation, 1, GL_FALSE, glm::value_ptr(pMat));
+				
+					auto lightPosLocation = glCall(glGetUniformLocation, program, "lightPos");
+					if (lightPosLocation != -1)
+					{
+						auto lightPos = glm::vec4(20.0f, 20.0f, 20.0f, 1.0f);
+						lightPos = view * lightPos;
+						glCall(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
+					}
+				
+					for (int i = 0; i < 4; i++)
+						glCall(glEnableVertexAttribArray, i);
+						
+					// pozice
+					glCall(glVertexAttribPointer, 0u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _x));
+					// texcoord
+					glCall(glVertexAttribPointer, 1u, 2, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _u)); 
+					// normala
+					glCall(glVertexAttribPointer, 2u, 3, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _nx));
+					// tangent
+					glCall(glVertexAttribPointer, 3u, 4, GL_FLOAT, GL_FALSE, (GLsizei) sizeof(Vertex), (void*) offsetof(Vertex, _tanx));
+					
+					glCall(glDrawElements, GL_TRIANGLES, (GLsizei) indices.size(), GL_UNSIGNED_INT, nullptr);
+					
+					for (int i = 0; i < 5; i++)
+						glCall(glDisableVertexAttribArray, i);
+						
+					glCall(glUseProgram, 0);
+				}
+			}
+		
 			SDL_GL_SwapWindow(window);
 		}
 		catch (std::exception& ex)

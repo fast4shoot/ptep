@@ -2,11 +2,15 @@
 
 uniform vec4 lightPos;
 
-in vec4 varPosition;
-in vec2 varTexCoord;
-in vec3 varNormal;
-in vec3 varTangent;
-in float varTanHandedness;
+in VertexOutput
+{
+	vec4 position;
+	vec2 texCoord;
+	vec3 normal;
+	vec3 tangent;
+	vec3 bitangent;
+	float tanHandedness;
+} input;
 
 out vec4 outColor;
 
@@ -23,17 +27,17 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv);
 
 void main()
 {
-	Material material = getColorForPoint(varPosition, varNormal, varTexCoord);
+	Material material = getColorForPoint(input.position, input.normal, input.texCoord);
 	
-	vec3 normNormal = normalize(varNormal);
-	vec3 normTangent = normalize(varTangent);// * varTanHandedness);
-	float normTanHandedness = sign(varTanHandedness);
-	vec3 normBitangent = cross(varNormal, varTangent.xyz) * normTanHandedness;
+	vec3 normNormal = normalize(input.normal);
+	vec3 normTangent = normalize(input.tangent);
+	float normTanHandedness = sign(input.tanHandedness);
+	vec3 normBitangent = normalize(input.bitangent);
 	mat3 tangentSpace = mat3(normTangent, normBitangent, normNormal);
 	vec3 modifiedNormal = tangentSpace * normalize(material.normal);
 	
-	vec3 eyeVec = normalize(-varPosition.xyz);
-	vec3 lightVec = normalize(lightPos - varPosition).xyz;
+	vec3 eyeVec = normalize(-input.position.xyz);
+	vec3 lightVec = normalize(lightPos - input.position).xyz;
 	vec3 reflectVec = reflect(-lightVec, modifiedNormal);
 	
 	vec3 ambient = vec3(0.3);
@@ -44,8 +48,8 @@ void main()
 	
 	outColor = vec4(material.color.rgb * light, material.color.a);
 	//outColor = vec4(modifiedNormal * 0.5 + vec3(0.5), material.color.a);
-    //outColor = vec4(varNormal * 0.5 + vec3(0.5), material.color.a);
-    //outColor = vec4(normTangent * 0.5 + vec3(0.5), material.color.a);// * varTanHandedness;
+	//outColor = vec4(normNormal * 0.5 + vec3(0.5), material.color.a);
+    //outColor = vec4(normTangent * 0.5 + vec3(0.5), material.color.a);
     //outColor = vec4(normBitangent * 0.5 + vec3(0.5), material.color.a);
 	//outColor = vec4((cross(varTangent, varNormal) - varBitangent) * 0.5 + vec3(0.5), material.color.a);
 }
