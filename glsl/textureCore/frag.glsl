@@ -47,7 +47,7 @@ void main()
 	vec3 light = ambient + diffuse * material.diffuseAmt + specular * material.specularAmt;
 	
 	outColor = vec4(material.color.rgb * light, material.color.a);
-	//outColor = vec4(modifiedNormal * 0.5 + vec3(0.5), material.color.a);
+	//outColor = vec4(normalize(material.normal) * 0.5 + vec3(0.5), material.color.a);
 	//outColor = vec4(normNormal * 0.5 + vec3(0.5), material.color.a);
     //outColor = vec4(normTangent * 0.5 + vec3(0.5), material.color.a);
     //outColor = vec4(normBitangent * 0.5 + vec3(0.5), material.color.a);

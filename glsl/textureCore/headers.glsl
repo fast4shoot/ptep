@@ -25,3 +25,7 @@ float pcos(float x);
 
 // presune hodnotu x z rozsahu -1..1 do rozsahu 0..1
 float makePositive(float x);
+
+float permute(float x);
+vec3 permute(vec3 x);
+vec4 permute(vec4 x);
