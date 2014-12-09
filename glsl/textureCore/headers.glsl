@@ -6,6 +6,7 @@ struct Material
 	float shininess;
 	float diffuseAmt;
 	float specularAmt;
+	float ambientAmt;
 };
 
 // 2D, 3D a 4D simplex noise

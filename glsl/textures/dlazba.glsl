@@ -100,7 +100,7 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv) {
         Material retmat;
         retmat.shininess = 30.0; // odrazivost
         retmat.diffuseAmt = 1.0; // difuzna odrazivost
-        // spekularna odr.
+        retmat.ambientAmt = 0.3;
         
        float fbm = fbmGen(uv);
        

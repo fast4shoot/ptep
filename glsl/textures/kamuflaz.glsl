@@ -1,3 +1,5 @@
+uniform float time;
+
 Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {
 	vec3 barva0 = vec3(0.56, 0.61, 0.35);
@@ -18,6 +20,7 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	ret.shininess = 30.0;
 	ret.diffuseAmt = 1.0;
 	ret.specularAmt = 0.1;
+	ret.ambientAmt = 0.3;
 	
 	return ret;
 }

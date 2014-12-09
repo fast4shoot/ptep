@@ -98,6 +98,9 @@ int main(int argc, char** argv)
 	bool showTangent = false;
 	bool loadShaders = true;
 	
+	auto ticks = SDL_GetTicks();
+	auto ticksDelta = 0;
+	
 	auto run = true;
 	while (run)
 	{
@@ -169,6 +172,10 @@ int main(int argc, char** argv)
 					break;
 			 }
 		}
+		
+		auto lastTicks = ticks;
+		ticks = SDL_GetTicks();
+		ticksDelta = ticks - lastTicks;
 		
 		try
 		{
@@ -279,6 +286,12 @@ int main(int argc, char** argv)
 						auto lightPos = glm::vec4(20.0f, 20.0f, 20.0f, 1.0f);
 						lightPos = view * lightPos;
 						glCall(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
+					}
+				
+					auto timeLocation = glCall(glGetUniformLocation, program, "time");
+					if (timeLocation != 0)
+					{
+						glCall(glUniform1f, timeLocation, ticks * 0.001);
 					}
 				
 					for (int i = 0; i < 4; i++)

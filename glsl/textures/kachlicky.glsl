@@ -53,6 +53,7 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	ret.shininess = 30.0;
 	ret.diffuseAmt = 1.0;
 	ret.specularAmt = 1.3;
+	ret.ambientAmt = 0.3;
 	
 	return ret;
 }
