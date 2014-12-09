@@ -192,8 +192,8 @@ projektu je kdo zodpovědný.
 
 \begin{itemize}
 \item \textbf{\AuthorA}: Aplikace, zpracování a UV mapování modelů, obecné shadery, textury drevo.glsl, kamuflaz.glsl a digitalnikamuflaz.glsl
-\item \textbf{\AuthorB}: Textura mramor.glsl
-\item \textbf{\AuthorC}: Textury kachlicky.glsl a jeansy.glsl
+\item \textbf{\AuthorB}: Textura dlazba.glsl
+\item \textbf{\AuthorC}: Textury kachlicky.glsl, jeansy.glsl, mraky.glsl a mrakyNaHladine.glsl
 \end{itemize}
 
 %---------------------------------------------------------------------------
@@ -205,13 +205,18 @@ potýkat, co zabralo čas.
 \paragraph{Rozsah:} 5-10 řádků
 
 \begin{itemize}
-\item \textbf{\AuthorA}: Prácné bylo todle a tamto.
-\item \textbf{\AuthorB}: Pracné bylo vyvážit poměr kafe, mléka a cukru. 
+\item \textbf{\AuthorA}: Jelikož doplnění textur o normálové mapy byl původně můj nápad, tak také bylo na mě, abych tuto techniku implementoval. Až později jsem ovšem zjistil, že pro mapování normál nestačí znát pouze normálové vektory jednotlivých vrcholů modelu, ale je nutné mít k dispozici celý tangentní prostor. Poté jsem začal experimentovat s výpočtem tangentního prostoru pomocí knihovny Open Asset Import Library i mého vlastního řešení. Nakonec kombinací obou metod dorazil k řešení, které stále není ideální, ale obecně funguje poměrně obstojně.
+\item \textbf{\AuthorB}: ZDENA DOPLNÍ
+\item \textbf{\AuthorC}: Najpracnejšou časťou projektu bola z môjho pohľadu konsolidácia návrhu textúry do samotného fragment shaderu. Svoje teoretické nápady na procedurálnu generáciu textúr som musel niekoľkokrát pozmeniť. Výsledkom môjho prvotného návrhu bola nekvalitná textúra.  Algoritmus výpočtu šumu som pozmenil a vytvoril som novú textúru znázorňujúcu bunkovú štruktúru, no oba výsledky boli tentoraz fádne a jednoliate. Nakoniec som tieto dva návrhy zlúčil do jedného. Výsledná textúra má relatívne komplexný vzhľad aj za použitia normál, ktorý by dve textúry samy o sebe určite nedosiahli. Jednu dobu sa na kockách objavovali grafické artefakty, ktoré boli spôsobené nekorektným otočením normálovéhu uhlu - na nesprávnu stranu. Pracné bolo teda vymyslieť také riešenie, aby moja dovtedajšia práca nebola stratená, ale zároveň, aby výsledkom bola relatívne kvalitná textúra, ktorá bude mať aj určitú priestorovú komplexnosť.
 \end{itemize}
 
 
 %---------------------------------------------------------------------------
 \section{Zkušenosti získané řešením projektu}
+
+\begin{itemize}
+	\item 
+\end{itemize}
 
 Popište, co jste se řešením projektu naučili. Zahrňte dovednosti obecně
 programátorské, věci z oblasti počítačové grafiky, ale i spolupráci v týmu,
@@ -222,65 +227,52 @@ hospodaření s časem, atd.
 %---------------------------------------------------------------------------
 \chapter{Autoevaluace}
 
-Ohodnoťte vaše řešení v jednotlivých kategoriích (0 – nic neuděláno,
-zoufalství, 100\% – dokonalost sama). Projekt, který ve finále obdrží plný
-počet bodů, může mít složky hodnocené i hodně nízko. Uvedení hodnot blízkých
-100\% ve všech nebo mnoha kategoriích může ukazovat na nepochopení problematiky nebo na snahu kamuflovat slabé stránky projektu. Bodově hodnocena bude i
-schopnost vnímat silné a slabé stránky svého řešení.
+\paragraph{Technický návrh (80\%):} Celý projekt je poměrně vhodně rozdělen na jednoduché podproblémy a zpravidla se jedná o platformu vhodnou pro experimentování s generováním různě složitých procedurálních textur.
 
-\paragraph{Technický návrh (50\%):} (analýza, dekompozice problému, volba
-vhodných prostředků, $\ldots$) 
-Stručně (1-2 řádky) komentujte hodnocení. 
+\paragraph{Programování (80\%):} Z tohoto pohledu je aplikace kvalitně zpracovaná, ovšem místy je slabě komentovaná. To je zjevné primárně u zdrojových kódů samotných textur, které jsou plné zdánlivě náhodně použitých funkcí a magických konstant.
 
-\paragraph{Programování (50\%):} (kvalita a čitelnost kódu, spolehlivost běhu,
-obecnost řešení, znovupoužitelnost, $\ldots$)
-Stručně (1-2 řádky) komentujte hodnocení. 
+\paragraph{Vzhled vytvořeného řešení (75\%):} Estetická kvalita je přijatelná, ale rozhodně ne dokonalá. Bylo by možné ji vylepšit například lepším mapováním textur na zvolené modely.
 
-\paragraph{Vzhled vytvořeného řešení (50\%):} (uvěřitelnost zobrazení,
-estetická kvalita, vhled GUI, $\ldots$)
-Stručně (1-2 řádky) komentujte hodnocení. 
+\paragraph{Využití zdrojů (60\%):} Bylo využito několik zdrojů týkajících se primárně generování šumu, a to jak kód, tak i teoretické základy. Obecně mohlo být zdrojů použito více.
 
-\paragraph{Využití zdrojů (50\%):} (využití existujícího kódu a dat, využití
-literatury, $\ldots$)
-Stručně (1-2 řádky) komentujte hodnocení. 
+\paragraph{Hospodaření s časem (50-90\%):} Práce na projektu začala dokonce i dříve, než byl projekt oficiálně zaregistrován. I přesto byly činnosti přiřazené některým členům týmu dokončeny později, než bylo očekáváno. Ale i přesto je projekt dokončen a nemá žádné výrazné nedostatky.
 
-\paragraph{Hospodaření s časem (50\%):} (rovnoměrné dotažení částí projektu,
-míra spěchu, chybějící části řešení, $\ldots$)
-Stručně (1-2 řádky) komentujte hodnocení. 
+\paragraph{Spolupráce v týmu (50\%):} Zdena a Tomáš se mohli míň flákat a aspoň si to rozjet :P. TODO DOPLNIT
 
-\paragraph{Spolupráce v týmu (50\%):} (komunikace, dodržování dohod, vzájemné
-spolehnutí, rovnoměrnost, $\ldots$)
-Stručně (1-2 řádky) komentujte hodnocení. 
-
-\paragraph{Celkový dojem (50\%):} (pracnost, získané dovednosti, užitečnost,
-volba zadání, cokoliv, $\ldots$)
-Stručně (5-10 řádků) komentujte hodnocení. 
+\paragraph{Celkový dojem (50\%):} Práce na tomto projektu byla příjemnou zkušeností, a to primárně z toho důvodu, že se jednalo hlavně o artistickou činnost, u které je člověk omezen jenom svou představivostí. BLAH BLAH BLAH TODO.
 
 %---------------------------------------------------------------------------
 \chapter{Ovládání vytvořeného programu}
 
 \section{Technologie potřebné pro spuštění programu}
-Zde vypište, jaké technologie vaše řešení používá – co potřebuje k běhu, co
-jste použili při tvorbě, atd. Text strukturujte, použijte odrážky,
-číslování$\ldots$
+\paragraph{Softwarové púožadavky}
+\begin{itemize}
+	\item Knihovna SDL2 - Vytvoření a ovládání okna aplikace a OpenGL kontextu.
+	\item Knihovna GLEW - Nahrávání OpenGL funkcí
+	\item Knihovna Open Asset Import Library - Nahrávání modelů.
+\end{itemize}
 
-\paragraph{Rozsah:} odrážky, dle potřeby
+\paragraph{Hardwarové požadavky}
+\begin{itemize}
+	\item Grafická karta s podporou alespoň OpenGL 3.3
+\end{itemize}
 
 \section{Programy a služby použité při tvorbě}
-Zde vypište, jaké technologie vaše řešení používá – co potřebuje k běhu, co
-jste použili při tvorbě, atd. Text strukturujte, použijte odrážky,
-číslování$\ldots$
-
-\paragraph{Rozsah:} odrážky, dle potřeby
+\begin{itemize}
+	\item Blender - Úprava a tvorba modelů a mapování textur.
+\end{itemize}
 
 \section{Obsluha programu}
-Stručně popište, jak se program ovládá (nejlépe odrážky rozdělené do
-kategorií). Pokud se ovládání odchyluje od zkratek a způsobů obvykle
-používaných v okýnkových nadstavbách operačních systémů, zdůvodněte, proč se
-tak děje.
-
-\paragraph{Rozsah:} odrážky nebo jednoduchý popis a odrážky
-
+\begin{itemize}
+	\item Držení levého tlačítka myši - Společně s pohybem myši umožňuje rotaci modelu.
+	\item Kolečko myši - Přiblížení a oddálení modelu.
+	\item Klávesa F5 - Opětovné nahrání a zkompilování shaderů.
+	\item Klávesa R - Zapíná a vypíná autonomní rotaci modelu.
+	\item Klávesa T - Zapíná a vypíná zobrazení tangentního prostoru modelu.
+	\item Šipka doleva a doprava - Přepíná mezi texturovacími shadery.
+	
+	
+\end{itemize}
 
 %---------------------------------------------------------------------------
 \chapter{Doporučení pro budoucí zadávání projektů}
