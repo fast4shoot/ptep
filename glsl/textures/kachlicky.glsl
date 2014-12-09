@@ -4,10 +4,9 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	float v = 10;
 	vec3 barva01 = vec3(0.9, 0.9, 0.9);
 	vec3 barva02 = vec3(0.06, 0.35, 0.96);
-    vec3 barva03 = vec3(0.16, 0.85, 0.16);
+	vec3 barva03 = vec3(0.16, 0.85, 0.16);
 	vec3 barva021 = barva02 * 0.4;
-	//vec3 barva022 = barva02 * 0.7;
-    vec3 barva022 = barva03 * 0.7;
+	vec3 barva022 = barva03 * 0.7;
 	vec3 barva023 = barva02 * 1.4;
 	vec3 barva024 = barva022 * 0.4;
 	vec3 barva025 = barva022 * 1.4;

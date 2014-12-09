@@ -1,0 +1,110 @@
+#include "shaderLoader.h"
+
+#include <stdexcept>
+
+#include "glUtil.h"
+#include "readFile.h"
+
+GLuint createShaderFromSource(const std::string& source, GLenum type, const std::string& filename)
+{
+	auto sourcePtr = (const GLchar*) source.data();
+	auto sourceLength = (GLint) source.size();
+	
+	auto shader = glCall(glCreateShader, type);
+	glCall(glShaderSource,shader, 1, &sourcePtr, &sourceLength);
+	glCall(glCompileShader, shader);
+	
+	GLint compileStatus;
+	glCall(glGetShaderiv, shader, GL_COMPILE_STATUS, &compileStatus);
+	if (compileStatus == GL_FALSE)
+	{
+		GLint infoLogLength;
+		glCall(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &infoLogLength);
+		
+		auto log = std::vector<GLchar>(infoLogLength);
+		glCall(glGetShaderInfoLog, shader, infoLogLength, nullptr, log.data());
+			
+		auto exStr = "Kompilace shaderu " + filename + " failnula: \n";
+		exStr.append(log.begin(), log.end());
+		
+		throw std::runtime_error(exStr);
+	}
+	
+	return shader;
+}
+
+GLuint createProgram(
+	const std::vector<std::string>& vertexShaders, 
+	const std::vector<std::string>& geometryShaders,
+	const std::vector<std::string>& fragmentShaders)
+{
+	std::vector<GLuint> shaders;
+	try
+	{
+		for (auto& source : vertexShaders)
+			shaders.push_back(createShaderFromSource(source, GL_VERTEX_SHADER));
+			
+		for (auto& source : geometryShaders)
+			shaders.push_back(createShaderFromSource(source, GL_GEOMETRY_SHADER));
+			
+		for (auto& source : fragmentShaders)
+			shaders.push_back(createShaderFromSource(source, GL_FRAGMENT_SHADER));
+	
+		auto program = glCall(glCreateProgram);
+		for (auto shader : shaders)
+			glCall(glAttachShader, program, shader);
+		
+		glCall(glLinkProgram, program);
+		GLint linkStatus;
+		glCall(glGetProgramiv, program, GL_LINK_STATUS, &linkStatus);
+		if (linkStatus == GL_FALSE)
+		{
+			GLint infoLogLength;
+			glCall(glGetProgramiv, program, GL_INFO_LOG_LENGTH, &infoLogLength);
+			
+			auto log = std::vector<GLchar>(infoLogLength);
+			glCall(glGetProgramInfoLog, program, infoLogLength, nullptr, log.data());
+			std::string exStr = "Linkování programu selhalo: \n";
+			exStr.append(log.begin(), log.end());
+			throw std::runtime_error(exStr);
+		}
+		
+		for (auto shader : shaders)
+			glCall(glDeleteShader, shader);
+			
+		return program;
+	}
+	catch (std::exception& ex)
+	{
+		for (auto shader : shaders)
+			glCall(glDeleteShader, shader);
+			
+		throw;
+	}
+}
+
+GLuint createTextureProgram(const std::string& textureShaderSource)
+{
+	static std::string headersSource = readFile("glsl/textureCore/headers.glsl");
+	
+	auto modifiedTextureShaderSource = "#version 330\n" + headersSource + "#line 1\n" + textureShaderSource;
+	
+	std::vector<std::string> vertexShaders;
+	std::vector<std::string> geometryShaders;
+	std::vector<std::string> fragmentShaders;
+	
+	vertexShaders.push_back(readFile("glsl/shared/vert.glsl"));
+	vertexShaders.push_back(readFile("glsl/textureCore/vert.glsl"));
+	
+	fragmentShaders.push_back(readFile("glsl/textureCore/noise2D.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/noise3D.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/noise4D.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/noiseFuncs.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/rotationMatrix.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/positiveTrig.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/rand.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/frag.glsl"));
+	fragmentShaders.push_back(modifiedTextureShaderSource);
+	
+	return createProgram(vertexShaders, geometryShaders, fragmentShaders);
+}

@@ -7,7 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <vector>
-#include <fstream>
 #include <limits>
 #include <type_traits>
 
@@ -16,328 +15,28 @@
 
 #include <SDL2/SDL.h>
 
-#include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <assimp/postprocess.h> 
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp> 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/string_cast.hpp>
 
-std::ostream& operator<<(std::ostream& stream, const aiVector3D& vec)
-{
-	stream << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
-	return stream;
-}
-
-struct Vertex
-{
-	Vertex(
-		float x, float y, float z, 
-		float nx, float ny, float nz, 
-		float tanx, float tany, float tanz, float tanHandedness,
-		float u, float v):
-		_x(x),
-		_y(y),
-		_z(z),
-		
-		_nx(nx),
-		_ny(ny),
-		_nz(nz),
-		
-		_tanx(tanx),
-		_tany(tany),
-		_tanz(tanz),
-		_tanHandedness(tanHandedness),
-		
-		_u(u),
-		_v(v)
-	{}
-
-	float _x;
-	float _y;
-	float _z;
-	float _pad0;
-	
-	float _u;
-	float _v;
-	float _pad1;
-	float _pad2;
-	
-	float _nx;
-	float _ny;
-	float _nz;
-	float _pad3;
-	
-	float _tanx;
-	float _tany;
-	float _tanz;
-	float _tanHandedness;
-};
-
-static_assert(sizeof(Vertex) == 64, "Vertex nemá velikost 64B");
-
-glm::vec3 aiToGlm(const aiVector3D& vector)
-{
-	return glm::vec3(vector.x, vector.y, vector.z);
-}
-
-const char* glErrorToString(GLenum err)
-{
-	switch (err)
-	{
-		case GL_INVALID_ENUM: return "GL_INVALID_ENUM";
-		case GL_INVALID_VALUE: return "GL_INVALID_VALUE";
-		case GL_INVALID_OPERATION: return "GL_INVALID_OPERATION";
-		case GL_STACK_OVERFLOW: return "GL_STACK_OVERFLOW";
-		case GL_STACK_UNDERFLOW: return "GL_STACK_UNDERFLOW";
-		case GL_OUT_OF_MEMORY: return "GL_OUT_OF_MEMORY";
-		case GL_INVALID_FRAMEBUFFER_OPERATION: return "GL_INVALID_FRAMEBUFFER_OPERATION";
-		default: throw std::runtime_error("Invalid GL error code");
-	}
-}
-
-struct GlErrorVerifier
-{
-private:
-	
-public:
-	GlErrorVerifier()
-	{}
-
-	~GlErrorVerifier()
-	{
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR)
-		{
-			std::ostringstream stream;
-			stream << "OGL error " << glErrorToString(err);
-			throw std::runtime_error(stream.str());
-		}
-	}
-};
-
-template<typename F, typename... Args>
-auto glCall(F f, Args&&... args) -> decltype(f(args...))
-{
-	auto verifier = GlErrorVerifier();
-	return f(args...);
-}
-
-std::string readFile(const std::string& filename)
-{
-	std::ifstream t(filename);
-	
-	if (!t)
-	{
-		throw std::runtime_error("Nelze otevřít shader " + filename);
-	}
-	
-	std::stringstream buffer;
-	buffer << t.rdbuf();
-	return buffer.str();
-}
-
-GLuint createShaderFromSource(const std::string& source, GLenum type, const std::string& filename = "")
-{
-	auto sourcePtr = (const GLchar*) source.data();
-	auto sourceLength = (GLint) source.size();
-	
-	auto shader = glCall(glCreateShader, type);
-	glCall(glShaderSource,shader, 1, &sourcePtr, &sourceLength);
-	glCall(glCompileShader, shader);
-	
-	GLint compileStatus;
-	glCall(glGetShaderiv, shader, GL_COMPILE_STATUS, &compileStatus);
-	if (compileStatus == GL_FALSE)
-	{
-		GLint infoLogLength;
-		glCall(glGetShaderiv, shader, GL_INFO_LOG_LENGTH, &infoLogLength);
-		
-		auto log = std::vector<GLchar>(infoLogLength);
-		glCall(glGetShaderInfoLog, shader, infoLogLength, nullptr, log.data());
-			
-		auto exStr = "Kompilace shaderu " + filename + " failnula: \n";
-		exStr.append(log.begin(), log.end());
-		
-		throw std::runtime_error(exStr);
-	}
-	
-	return shader;
-}
-
-GLuint createProgram(
-	const std::vector<std::string>& vertexShaders, 
-	const std::vector<std::string>& geometryShaders,
-	const std::vector<std::string>& fragmentShaders)
-{
-	std::vector<GLuint> shaders;
-	try
-	{
-		for (auto& source : vertexShaders)
-			shaders.push_back(createShaderFromSource(source, GL_VERTEX_SHADER));
-			
-		for (auto& source : geometryShaders)
-			shaders.push_back(createShaderFromSource(source, GL_GEOMETRY_SHADER));
-			
-		for (auto& source : fragmentShaders)
-			shaders.push_back(createShaderFromSource(source, GL_FRAGMENT_SHADER));
-	
-		auto program = glCall(glCreateProgram);
-		for (auto shader : shaders)
-			glCall(glAttachShader, program, shader);
-		
-		glCall(glLinkProgram, program);
-		GLint linkStatus;
-		glCall(glGetProgramiv, program, GL_LINK_STATUS, &linkStatus);
-		if (linkStatus == GL_FALSE)
-		{
-			GLint infoLogLength;
-			glCall(glGetProgramiv, program, GL_INFO_LOG_LENGTH, &infoLogLength);
-			
-			auto log = std::vector<GLchar>(infoLogLength);
-			glCall(glGetProgramInfoLog, program, infoLogLength, nullptr, log.data());
-			std::string exStr = "Linkování programu selhalo: \n";
-			exStr.append(log.begin(), log.end());
-			throw std::runtime_error(exStr);
-		}
-		
-		for (auto shader : shaders)
-			glCall(glDeleteShader, shader);
-			
-		return program;
-	}
-	catch (std::exception& ex)
-	{
-		for (auto shader : shaders)
-			glCall(glDeleteShader, shader);
-			
-		throw;
-	}
-}
-
-GLuint createTextureProgram(const std::string& textureShaderSource)
-{
-	static std::string headersSource = readFile("glsl/textureCore/headers.glsl");
-	
-	auto modifiedTextureShaderSource = "#version 330\n" + headersSource + "#line 1\n" + textureShaderSource;
-	
-	std::vector<std::string> vertexShaders;
-	std::vector<std::string> geometryShaders;
-	std::vector<std::string> fragmentShaders;
-	
-	vertexShaders.push_back(readFile("glsl/shared/vert.glsl"));
-	vertexShaders.push_back(readFile("glsl/textureCore/vert.glsl"));
-	
-	fragmentShaders.push_back(readFile("glsl/textureCore/noise2D.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/noise3D.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/noise4D.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/noiseFuncs.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/rotationMatrix.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/positiveTrig.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/rand.glsl"));
-	fragmentShaders.push_back(readFile("glsl/textureCore/frag.glsl"));
-	fragmentShaders.push_back(modifiedTextureShaderSource);
-	
-	return createProgram(vertexShaders, geometryShaders, fragmentShaders);
-}
-
-void loadModel(
-	const std::string& filename, 
-	std::vector<Vertex>& vertices, 
-	std::vector<GLuint>& indices)
-{
-	assert (vertices.size() == 0);
-	assert (indices.size() == 0);
-	
-	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(filename, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices | aiProcess_CalcTangentSpace );
-	if (!scene)
-	{
-		throw std::runtime_error("Nepodařilo se přečíst model");		
-	}
-	
-	if (scene->mNumMeshes != 1)
-	{
-		throw std::runtime_error("Jsou podporovány pouze modely s počtem meshů = 1");
-	}
-	
-	const aiMesh* mesh = scene->mMeshes[0];
-	
-	if (!mesh->HasFaces())
-		throw std::runtime_error("Mesh musí mít facy");
-		
-	if (!mesh->HasPositions())
-		throw std::runtime_error("Mesh musí mít pozice");
-		
-	if (!mesh->HasNormals())
-		throw std::runtime_error("Mesh musí mít normály");
-		
-	if (!mesh->HasTextureCoords(0))
-		throw std::runtime_error("Mesh musí mít tex coordy");
-		
-	if (mesh->GetNumUVChannels() != 1)
-	{
-		std::stringstream ss;
-		ss << "Mesh musí mít jeden UV kanál, ne " << mesh->GetNumUVChannels() << " kanálů";
-		throw std::runtime_error(ss.str());
-	}
-	
-	vertices.reserve(mesh->mNumVertices);
-	
-	// Prevedeme vertexy
-	for (unsigned i = 0; i < mesh->mNumVertices; i++)
-	{
-		auto position = mesh->mVertices[i];
-		auto normal = aiToGlm(mesh->mNormals[i]);
-		auto tangent = aiToGlm(mesh->mTangents[i]);
-		auto bitangent = aiToGlm(mesh->mBitangents[i]);
-		auto uvw = mesh->mTextureCoords[0][i];
-		
-		tangent = glm::normalize(tangent - normal * glm::dot(normal, tangent));
-		auto tanHandedness = glm::dot(glm::cross(normal, tangent), bitangent) < 0.0f ? -1.0f : 1.0f;
-		
-		vertices.push_back(Vertex(
-			position.x, 
-			position.y, 
-			position.z, 
-			normal.x, 
-			normal.y, 
-			normal.z,
-			tangent.x,
-			tangent.y,
-			tangent.z,
-			tanHandedness,
-			uvw.x,
-			uvw.y));
-	}
-	
-	indices.reserve(mesh->mNumFaces * 3);
-	
-	// Prevedeme indexy
-	for (unsigned i = 0; i < mesh->mNumFaces; i++)
-	{
-		const aiFace face = mesh->mFaces[i];
-		
-		if (face.mNumIndices != 3)
-		{
-			throw std::runtime_error("Jsou podporovány pouze facy se třemi body");
-		}
-		
-		for (unsigned j = 0; j < face.mNumIndices; j++)
-		{
-			indices.push_back(face.mIndices[j]);
-		}
-	}
-}
+#include "glUtil.h"
+#include "readFile.h"
+#include "modelLoader.h"
+#include "shaderLoader.h"
 
 int main(int argc, char** argv)
 {
-	if (argc != 3)
+	if (argc < 3)
 	{
-		throw std::runtime_error("Nesprávný počet parametrů. Správné použité je: \nptep <shader s texturou> <model>");
+		throw std::runtime_error("Nesprávný počet parametrů. Správné použité je: \nptep <model> <shader s texturou 0> <shader s texturou 1> ...");
 	}
+	
+	auto modelFilename = std::string(argv[1]);
+	auto textureFilenames = std::vector<std::string>(argv + 2, argv + argc);
+	int currentTextureIdx = 0;
 	
 	SDL_Init(SDL_INIT_VIDEO);
 	
@@ -363,7 +62,6 @@ int main(int argc, char** argv)
 	}
 	std::cout << "Jedeme: " << glewGetString(GLEW_VERSION) << std::endl;
 	
-	std::string modelFilename = argv[2];
 	std::cout << "Loadujeme model " << modelFilename << std::endl;
 	std::vector<Vertex> vertices;
 	std::vector<GLuint> indices;
@@ -452,7 +150,18 @@ int main(int argc, char** argv)
 						case SDLK_r: rotate = !rotate; break;
 						case SDLK_t: showTangent = !showTangent; break;
 						case SDLK_F5: loadShaders = true; break;
+						case SDLK_LEFT: 
+							currentTextureIdx--; currentTextureIdx %= textureFilenames.size();
+							std::cout << "Přepínám na texturu " << textureFilenames[currentTextureIdx] << std::endl;
+							loadShaders = true;
+							break;
 						
+						case SDLK_RIGHT: 
+							currentTextureIdx++; currentTextureIdx %= textureFilenames.size();
+							std::cout << "Přepínám na texturu " << textureFilenames[currentTextureIdx] << std::endl;
+							loadShaders = false;
+							break;
+								
 					}
 					break;
 				
@@ -463,7 +172,7 @@ int main(int argc, char** argv)
 		
 		try
 		{
-			auto programSource = readFile(argv[1]);
+			auto programSource = readFile(textureFilenames[currentTextureIdx]);
 			if (programSource != lastProgramSource)
 			{
 				if (textureProgram != 0)
@@ -514,7 +223,7 @@ int main(int argc, char** argv)
 				
 				try
 				{
-					textureProgram = createTextureProgram(readFile(argv[1]));
+					textureProgram = createTextureProgram(readFile(textureFilenames[currentTextureIdx]));
 				}
 				catch (std::exception& ex)
 				{
