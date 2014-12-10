@@ -21,12 +21,12 @@ out VertexOutput
 void applyPosition(vec4 position);
 
 void main()
-{
+{;
 	output.position = mvMat * inPosition;
 	output.texCoord = inTexCoord;
-	output.normal = normalize(mvNormMat * inNormal);
+	output.normal = normalize(mat3(mvNormMat) * inNormal);
 	output.tanHandedness = inTangent.w;
-	output.tangent = normalize(mvNormMat * inTangent.xyz) * -inTangent.w;
+	output.tangent = normalize(mat3(mvNormMat) * inTangent.xyz) * -inTangent.w;
 	
 	output.bitangent = cross(output.normal, output.tangent) * output.tanHandedness;
 	
