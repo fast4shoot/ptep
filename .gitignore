@@ -1,2 +1,11 @@
 ptep
 *.o
+doc/images/logo-eps-converted-to.pdf
+doc/pgr.aux
+doc/pgr.bbl
+doc/pgr.blg
+doc/pgr.log
+doc/pgr.out
+doc/pgr.pdf
+doc/pgr.synctex.gz
+doc/pgr.toc
