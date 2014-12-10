@@ -31,7 +31,7 @@
 \newcommand\AuthorB{Tomáš Šujan}
 \newcommand\AuthorBEmail{xsujan02@stud.fit.vutbr.cz}
 \newcommand\AuthorC{Zdeněk Tretter}
-\newcommand\AuthorCEmail{xtrettNEVIMKOLIK@stud.fit.vutbr.cz}
+\newcommand\AuthorCEmail{xtrett00@stud.fit.vutbr.cz}
 \newcommand\Faculty{Fakulta Informačních Technologií}
 \newcommand\School{Vysoké Učení Technické v Brně}
 
@@ -138,11 +138,11 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. In non condimentum augu
 	\item $\ldots$
 \end{itemize}
 
-\begin{center}
-	\captionsetup{type=figure}
-		\includegraphics[width=10cm]{images/sample.jpg}
-	\captionof{figure}{Popisek vzorového obrázek}
-\end{center}
+%\begin{center}
+%	\captionsetup{type=figure}
+%		\includegraphics[width=10cm]{images/sample.jpg}
+%	\captionof{figure}{Popisek vzorového obrázek}
+%\end{center}
 
 \section{Druhá věc}
 
@@ -167,9 +167,10 @@ Etiam a laoreet dolor, vel blandit ipsum. Pellentesque habitant morbi tristique 
 \end{table}
 
 \section{Třetí věc}
-
-Vestibulum ac tellus et massa facilisis tristique in in ante. In elementum luctus ante, id cursus nulla. Quisque sit amet dolor dui. Suspendisse bibendum auctor augue, a posuere enim dictum non. Nunc iaculis libero eget interdum egestas. Suspendisse pretium cursus massa vel fringilla. 
-	
+  	Jednoduchá a přesto slušně uvěřitelná textura mraků, které se navíc pohybují a mění.
+    TODO obrázek
+    
+  
 
 
 %---------------------------------------------------------------------------
@@ -193,15 +194,13 @@ Vysvětlete je pomocí obrázků, schémat, vzorců apod.
 %---------------------------------------------------------------------------
 \section{Co bylo nejpracnější}
 
-Popište, co vám při řešení nejvíce komplikovalo život, s čím jste se museli
-potýkat, co zabralo čas.
-
-\paragraph{Rozsah:} 5-10 řádků
-
 \begin{itemize}
 \item \textbf{\AuthorA}: Jelikož doplnění textur o normálové mapy byl původně můj nápad, tak také bylo na mě, abych tuto techniku implementoval. Až později jsem ovšem zjistil, že pro mapování normál nestačí znát pouze normálové vektory jednotlivých vrcholů modelu, ale je nutné mít k dispozici celý tangentní prostor. Poté jsem začal experimentovat s výpočtem tangentního prostoru pomocí knihovny Open Asset Import Library i mého vlastního řešení. Nakonec kombinací obou metod dorazil k řešení, které stále není ideální, ale obecně funguje poměrně obstojně.
-\item \textbf{\AuthorB}: ZDENA DOPLNÍ
-\item \textbf{\AuthorC}: Najpracnejšou časťou projektu bola z môjho pohľadu konsolidácia návrhu textúry do samotného fragment shaderu. Svoje teoretické nápady na procedurálnu generáciu textúr som musel niekoľkokrát pozmeniť. Výsledkom môjho prvotného návrhu bola nekvalitná textúra.  Algoritmus výpočtu šumu som pozmenil a vytvoril som novú textúru znázorňujúcu bunkovú štruktúru, no oba výsledky boli tentoraz fádne a jednoliate. Nakoniec som tieto dva návrhy zlúčil do jedného. Výsledná textúra má relatívne komplexný vzhľad aj za použitia normál, ktorý by dve textúry samy o sebe určite nedosiahli. Jednu dobu sa na kockách objavovali grafické artefakty, ktoré boli spôsobené nekorektným otočením normálovéhu uhlu - na nesprávnu stranu. Pracné bolo teda vymyslieť také riešenie, aby moja dovtedajšia práca nebola stratená, ale zároveň, aby výsledkom bola relatívne kvalitná textúra, ktorá bude mať aj určitú priestorovú komplexnosť.
+\item \textbf{\AuthorB}: Najpracnejšou časťou projektu bola z môjho pohľadu konsolidácia návrhu textúry do samotného fragment shaderu. Svoje teoretické nápady na procedurálnu generáciu textúr som musel niekoľkokrát pozmeniť. Výsledkom môjho prvotného návrhu bola nekvalitná textúra.  Algoritmus výpočtu šumu som pozmenil a vytvoril som novú textúru znázorňujúcu bunkovú štruktúru, no oba výsledky boli tentoraz fádne a jednoliate. Nakoniec som tieto dva návrhy zlúčil do jedného. Výsledná textúra má relatívne komplexný vzhľad aj za použitia normál, ktorý by dve textúry samy o sebe určite nedosiahli. Jednu dobu sa na kockách objavovali grafické artefakty, ktoré boli spôsobené nekorektným otočením normálovéhu uhlu - na nesprávnu stranu. Pracné bolo teda vymyslieť také riešenie, aby moja dovtedajšia práca nebola stratená, ale zároveň, aby výsledkom bola relatívne kvalitná textúra, ktorá bude mať aj určitú priestorovú komplexnosť.
+\item \textbf{\AuthorC}: Největším problémem u mě bylo projekt přeložit, abych mohl začít pracovat. Na OS Windows se mi nedařilo správně nainstalovat všechny potřebné knihovny a vše správně nastavit. Linux zase nechtěl spolupracovat s mojí AMD grafickou kartou. A integrovaná grafická karta nepodporovala vyšší verze OpenGL. Nakonec jsem programoval přes VNC u Zdeňka Biberleho. 
+
+Co se týče samotného programování, tak nebylo jednoduché odhadnout, jak se jednotlivé OpenGL funkce zachovají na různé vstupy. O to složitější to bylo při jejich kombinaci, proto jsem měl vždy na začátku jen základní představu, jak by měla výsledná textura vypadat. Postupně jsem pak vymýšlel detaily, jejichž implementace si ale mnohdy vyžádala i značné změny již napsaného kódu, což bylo časově náročné. 
+
 \end{itemize}
 
 
@@ -217,6 +216,12 @@ programátorské, věci z oblasti počítačové grafiky, ale i spolupráci v t�
 hospodaření s časem, atd.
 
 \paragraph{Rozsah:} formulujte stručně, uchopte cca 3-5 věcí
+
+\begin{itemize}
+\item \textbf{\AuthorA}: Prohloubení znalostí o geometry shaderech, tangentních prosterech, normal mappingu a příjemné zjištění, že SDL2 je mnohem schopnější, než SDL1.2.
+\item \textbf{\AuthorB}:
+\item \textbf{\AuthorC}: Seznámení s jazykem GLSL, programování v něm, poznání čeho je schopen a práce přes VNC.
+\end{itemize}
 
 %---------------------------------------------------------------------------
 \chapter{Autoevaluace}
@@ -264,9 +269,9 @@ hospodaření s časem, atd.
 	\item Klávesa R - Zapíná a vypíná autonomní rotaci modelu.
 	\item Klávesa T - Zapíná a vypíná zobrazení tangentního prostoru modelu.
 	\item Šipka doleva a doprava - Přepíná mezi texturovacími shadery.
-	
-	
 \end{itemize}
+
+Soubor se zobrazovaným modelem je programu předán jako první parametr, ostatní parametry pak specifikují texturovací shadery, mezi kterými lze přepínat.
 
 %---------------------------------------------------------------------------
 \chapter{Doporučení pro budoucí zadávání projektů}
@@ -283,9 +288,7 @@ novou kapitolu.
 %---------------------------------------------------------------------------
 
 \bibliographystyle{plain}
-
 \nocite{gustavson2014,mcewan2012}
-
 \bibliography{reference}
 \addcontentsline{toc}{chapter}{Literatura}
 
