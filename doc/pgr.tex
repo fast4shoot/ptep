@@ -156,9 +156,7 @@ Naše aplikace umožňuje, aby jednotlivé texturovací shadery generovaly nejen
 
 Tato textura vznikla spojením dvou původně plánovaných jiných textur - textury mramoru a buňkové struktury. Ani jedna z původních implementací těchto textur ovšem nevypadala příliš přesvědčivě. Řešením bylo spojení obou textur do jedné - textura mramoru byla použita pro vytvoření nerovností na jednotlivých dlažebních kostkách a původní buňková struktura byla modifikována tak, aby připomínala dlažbový vzor. 
 
-Textura byla dále doplněna výpočtem normál pro jednotlivé dlažební kostky, což má za následek značně prostorový vzhled a korektně vypadající osvětlení. Dodatečně byly tyto normály a také míra spekulární odrazivosti povrchu textury doplněny o další šum, což má za následek příjemně vypadající nerovný povrch
-
-Pôvodne mali byť moje textúry dve - mramorový povrch a bunková štruktúra. Mramorová dlažba mala byť pokrytá šumom, ktorý som získal prenásobením jemného šumu (snoise) so sínusovým vzorom, na ktorý bola potom aplikovaná turbulencia. Do tejto kombinácie bola nakoniec vnásobená farba mramoru. Výsledok bol ale veľmi nekvalitný. Nový návrh - bunkový vzor - vytvorený spojením viacerých šumových a permutačných funkcií dle \cite{gustavson2014} vyzeral celkom prijateľne po pridaní bledomodrej farby, no zároveň tiež veľmi fádne a plasticky. Ako riešenie som zvolil spojenie oboch textúr do jednej - bunky som upravil tak, aby pripomínali dlažbový vzor, a na ne som aplikoval mramorový šum. Navyše som do výpočtu zahrnul výpočet normály pre jednotlivé bunky - dlažobné kocky, čo má za následok pseudo-priestorový vzhľad. Na spekulárne osvetlenie som tiež aplikoval tento šum, čo má za následok fakt, že dlažba sa neleskne všade rovnako, ale "novšie" kocky (teda tie s menším pokrytím mramorového šumu) sa lesknú viac, ako tie "obchodené" - viac zašumené. Výstupom je relatívne kvalitná textúra, ktorá by sa dala použiť v skutočnom projekte.
+Textura byla dále doplněna výpočtem normál pro jednotlivé dlažební kostky, což má za následek značně prostorový vzhled a korektně vypadající osvětlení. Dodatečně byly tyto normály a také míra spekulární odrazivosti povrchu textury doplněny o další šum, což má za následek příjemně vypadající nerovný povrch.
 
 \section{Textura mraky.glsl}
 \begin{figure}[h]
@@ -170,7 +168,6 @@ Pôvodne mali byť moje textúry dve - mramorový povrch a bunková štruktúra.
 Jednoduchá a přesto slušně uvěřitelná textura mraků, které se navíc pohybují a mění. 
 
 Právě změna tvaru mraků je  na této textuře zajímavá. Tvar mraků je generovaný pomocí turbulence doplněné o posun závislý na čase v jedné ze složek.
-  
 
 
 %---------------------------------------------------------------------------
@@ -208,7 +205,7 @@ Co se týče samotného programování, tak nebylo jednoduché odhadnout, jak se
 
 \begin{itemize}
 \item \textbf{\AuthorA}: Prohloubení znalostí o geometry shaderech, tangentních prostorech, normal mappingu a příjemné zjištění, že SDL2 je mnohem schopnější, než SDL1.2.
-\item \textbf{\AuthorB}:
+\item \textbf{\AuthorB}: Schopnosť porozumieť prostrediu GLSL a programovať v ňom, nadobudnutie abstraktného premýšľania pri tvorbe procedurálne generovaných textúr a spojenie týchto dvoch schopností do funkčnej podoby v podobe vytvorenia textúry. 
 \item \textbf{\AuthorC}: Seznámení s jazykem GLSL, programování v něm, poznání čeho je schopen a práce přes VNC.
 \end{itemize}
 
