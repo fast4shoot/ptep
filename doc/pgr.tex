@@ -109,7 +109,7 @@ unicode=true,
 	\item Prozkoumání a případná implementace generování nejen barevných dat, kupříkladu:
 	\begin{itemize}
 		\item Data pro techniky jako bump mapping, normal mapping, parallax mapping.
-		\item koeficienty odrazivosti světla a jiné vlastnosti materiálů týkající se světla.
+		\item Koeficienty odrazivosti světla a jiné vlastnosti materiálů týkající se světla.
 	\end{itemize}
 	\item Implementace různě vypadajících a různě složitých textur využitím dostupných vlastností hlavní aplikace.
 	\item Prozkoumání a případná implementace animovaných textur.
@@ -191,7 +191,7 @@ Informace, které by byly užitečné pro tento projekt, přinesla až předná�
 \section{Co bylo nejpracnější}
 
 \begin{itemize}
-\item \textbf{\AuthorA}: Jelikož doplnění textur o normálové mapy byl původně můj nápad, tak také bylo na mě, abych tuto techniku implementoval. Až později jsem ovšem zjistil, že pro mapování normál nestačí znát pouze normálové vektory jednotlivých vrcholů modelu, ale je nutné mít k dispozici celý tangentní prostor. Poté jsem začal experimentovat s výpočtem tangentního prostoru pomocí knihovny Open Asset Import Library i mého vlastního řešení. Nakonec kombinací obou metod dorazil k řešení, které stále není ideální, ale obecně funguje poměrně obstojně.
+\item \textbf{\AuthorA}: Jelikož doplnění textur o normálové mapy byl původně můj nápad, tak také bylo na mě, abych tuto techniku implementoval. Až později jsem ovšem zjistil, že pro mapování normál nestačí znát pouze normálové vektory jednotlivých vrcholů modelu, ale je nutné mít k dispozici celý tangentní prostor. Poté jsem začal experimentovat s výpočtem tangentního prostoru pomocí knihovny Open Asset Import Library i mého vlastního řešení. Nakonec jsem kombinací obou metod dorazil k řešení, které stále není ideální, ale obecně funguje poměrně obstojně.
 \item \textbf{\AuthorB}: Najpracnejšou časťou projektu bola z môjho pohľadu konsolidácia návrhu textúry do samotného fragment shaderu. Svoje teoretické nápady na procedurálnu generáciu textúr som musel niekoľkokrát pozmeniť. Výsledkom môjho prvotného návrhu bola nekvalitná textúra.  Algoritmus výpočtu šumu som pozmenil a vytvoril som novú textúru znázorňujúcu bunkovú štruktúru, no oba výsledky boli tentoraz fádne a jednoliate. Nakoniec som tieto dva návrhy zlúčil do jedného. Výsledná textúra má relatívne komplexný vzhľad aj za použitia normál, ktorý by dve textúry samy o sebe určite nedosiahli. Jednu dobu sa na kockách objavovali grafické artefakty, ktoré boli spôsobené nekorektným otočením normálovéhu uhlu - na nesprávnu stranu. Pracné bolo teda vymyslieť také riešenie, aby moja dovtedajšia práca nebola stratená, ale zároveň, aby výsledkom bola relatívne kvalitná textúra, ktorá bude mať aj určitú priestorovú komplexnosť.
 \item \textbf{\AuthorC}: Největším problémem u mě bylo projekt přeložit, abych mohl začít pracovat. Na OS Windows se mi nedařilo správně nainstalovat všechny potřebné knihovny a vše správně nastavit. Linux zase nechtěl spolupracovat s mojí AMD grafickou kartou. A integrovaná grafická karta nepodporovala vyšší verze OpenGL. Nakonec jsem programoval přes VNC u Zdeňka Biberleho. 
 
