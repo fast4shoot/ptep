@@ -5,6 +5,8 @@
 \usepackage{graphicx}
 \usepackage{epstopdf}
 \usepackage[margin=2cm]{caption}
+\usepackage{subcaption}
+\usepackage{float}
 \usepackage[top=3cm, left=2cm, right=2cm, text={17cm, 24cm}, ignorefoot]{geometry}
 \usepackage{color}
 \usepackage{url}
@@ -19,13 +21,14 @@
 \usepackage{natbib}
 
 
+
 % ----- vyberte jazyk -------------------------------------------------------
 \usepackage[english,czech]{babel}
 %\usepackage[english]{babel}
 
 % ----- dopiste titulky -----------------------------------------------------
 \newcommand\Course{Počítačová grafika}
-\newcommand\WorkTitle{Téma semestrální práce}
+\newcommand\WorkTitle{Procedurální texturování pomocí shaderů}
 \newcommand\AuthorA{Zdeněk Biberle}
 \newcommand\AuthorAEmail{xbiber00@stud.fit.vutbr.cz}
 \newcommand\AuthorB{Tomáš Šujan}
@@ -95,92 +98,84 @@ unicode=true,
 \newpage
 \chapter{Zadání}
 
-Zde napište informace k zadání (nejde jen o přepis toho, co je na webu;
-komentujte vaše vlastní zpřesnění zadání, zaměření, důrazy, pojetí atd.). Text
-strukturujte, použijte odrážky, číslování$\ldots$
-
-\paragraph{Rozsah:} cca 10 odrážek
-
 \begin{itemize}
-	\item Položka 1
+	\item Implementace jednoduché platformy pro experimentování s tvorbou procedurálních textur s následujícími vlastnostmi:
 	\begin{itemize}
-		\item Podpoložka 1.1
-		\item Podpoložka 1.2
-		\item $\ldots$
+		\item Zobrazení různých modelů.
+		\item Poskytnutí funkcí vhodných pro generování procedurálních textur
+		\item Odezva na změny v shaderech v reálném čase nebo alespoň na požádání (každopádně bez nutnosti restartovat či dokonce překompilovávat aplikaci).
+		\item Možnost vizualizace nejen obrazových dat pro snažší nalezení problémů.
 	\end{itemize}
-	\item Položka 2
+	\item Prozkoumání a případná implementace generování nejen barevných dat, kupříkladu:
 	\begin{itemize}
-		\item Podpoložka 2.1
-		\item Podpoložka 2.2
-		\item $\ldots$
+		\item Data pro techniky jako bump mapping, normal mapping, parallax mapping.
+		\item koeficienty odrazivosti světla a jiné vlastnosti materiálů týkající se světla.
 	\end{itemize}
-	\item $\ldots$
+	\item Implementace různě vypadajících a různě složitých textur využitím dostupných vlastností hlavní aplikace.
+	\item Prozkoumání a případná implementace animovaných textur.
 \end{itemize}
 
 %---------------------------------------------------------------------------
 \chapter{Nejdůležitější dosažené výsledky}
 
-Popište 3 věci, které jsou na vašem projektu nejlepší. Nejlépe ukažte a
-komentujte obrázky, v nejhorším případě vypište textově.
+\section{Normálové mapy}
 
-\section{První věc}
+Naše aplikace umožňuje, aby jednotlivé texturovací shadery generovaly nejenom barevnou složku textury, ale i její normálovou mapu. To může v praxi být poměrně náročná operace, která vyžaduje nemalé množství maticových či vektorových operací, ovšem její vizuální přínos je značný. Příkladem budiž textura drevo.glsl, jejíž barevná složka, kterou vidíme na obrázku~\ref{fig:drevo-color}, není příliš zajímavá, ovšem přidáním normálové mapy dle obrázku~\ref{fig:drevo-normal} dostaneme mnohem zajímavější výsledek, viditelný na obrázku~\ref{fig:drevo-full}.
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. In non condimentum augue, quis accumsan tellus. Sed sagittis mauris tortor, a varius ipsum feugiat sed. Morbi dapibus neque purus, id condimentum sem tincidunt quis. Sed lacinia a justo in rutrum. Nam a enim id urna cursus consectetur non a mi. Fusce vitae augue urna. Nunc nec malesuada enim, vitae blandit leo. Vestibulum et orci nibh. Phasellus in nisi rutrum, mattis metus vehicula, tempus neque.
-
-\begin{itemize}
-	\item Položka 1
-	\begin{itemize}
-		\item Podpoložka 1.1
-		\item Podpoložka 1.2
-		\item $\ldots$
-	\end{itemize}
-	\item Položka 2
-	\item $\ldots$
-\end{itemize}
-
-%\begin{center}
-%	\captionsetup{type=figure}
-%		\includegraphics[width=10cm]{images/sample.jpg}
-%	\captionof{figure}{Popisek vzorového obrázek}
-%\end{center}
-
-\section{Druhá věc}
-
-Etiam a laoreet dolor, vel blandit ipsum. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Nam aliquet ipsum eget semper pretium. Maecenas mauris tortor, pretium sit amet convallis et, iaculis vel tortor. Donec ultrices magna et commodo tempus. Etiam sagittis lectus vitae lectus ultricies tincidunt. Nam aliquam non magna eget pellentesque. 
-
-\begin{table}[h!]
-	\begin{center}
-    \begin{tabular}{ | p{3.5cm} | p{3.5cm} | p{3.5cm} | p{3.5cm} |}
-    \hline
-    Sloupec A & Sloupec B & Sloupec C & Sloupec D
-    \\ \hline
-    
-	A1 & B1 & C1 & D1
-	\\ \hline
+\begin{figure}[h]
+	\centering
+	\begin{subfigure}[b]{0.40\textwidth}
+		\captionsetup{type=figure}
+		\includegraphics[width=\textwidth]{images/drevo-color.png}
+		\captionof{figure}{Barevná složka textury drevo.glsl}
+		\label{fig:drevo-color}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.40\textwidth}
+		\captionsetup{type=figure}
+		\includegraphics[width=\textwidth]{images/drevo-normal.png}
+		\captionof{figure}{Normálová mapa textury drevo.glsl}
+		\label{fig:drevo-normal}
+	\end{subfigure}
 	
-	A2 & B2 & C2 & D2
-	\\ \hline
-	
-    \end{tabular}
-	\end{center}	
-	\caption{Vzorová tabulka}  
-\end{table}
+	\begin{subfigure}[b]{0.60\textwidth}
+		\captionsetup{type=figure}
+		\includegraphics[width=\textwidth]{images/drevo-full.png}
+		\captionof{figure}{Finální vzhled textury drevo.glsl}
+		\label{fig:drevo-full}
+	\end{subfigure}
+\end{figure}
 
-\section{Třetí věc}
-  	Jednoduchá a přesto slušně uvěřitelná textura mraků, které se navíc pohybují a mění.
-    TODO obrázek
-    
+\section{Textura dlazba.glsl}
+
+\begin{figure}[h]
+	\centering
+	\captionsetup{type=figure}
+	\includegraphics[width=\textwidth]{images/dlazba.png}
+	\captionof{figure}{Textura dlazba.glsl}
+\end{figure} 
+
+Pôvodne mali byť moje textúry dve - mramorový povrch a bunková štruktúra. Mramorová dlažba mala byť pokrytá šumom, ktorý som získal prenásobením jemného šumu (snoise) so sínusovým vzorom, na ktorý bola potom aplikovaná turbulencia. Do tejto kombinácie bola nakoniec vnásobená farba mramoru. Výsledok bol ale veľmi nekvalitný. Nový návrh - bunkový vzor - vytvorený spojením viacerých šumových a permutačných funkcií dle \cite{gustavson2014} vyzeral celkom prijateľne po pridaní bledomodrej farby, no zároveň tiež veľmi fádne a plasticky. Ako riešenie som zvolil spojenie oboch textúr do jednej - bunky som upravil tak, aby pripomínali dlažbový vzor, a na ne som aplikoval mramorový šum. Navyše som do výpočtu zahrnul výpočet normály pre jednotlivé bunky - dlažobné kocky, čo má za následok pseudo-priestorový vzhľad. Na spekulárne osvetlenie som tiež aplikoval tento šum, čo má za následok fakt, že dlažba sa neleskne všade rovnako, ale "novšie" kocky (teda tie s menším pokrytím mramorového šumu) sa lesknú viac, ako tie "obchodené" - viac zašumené. Výstupom je relatívne kvalitná textúra, ktorá by sa dala použiť v skutočnom projekte.
+
+\section{Textura mraky.glsl}
+\begin{figure}[h]
+	\captionsetup{type=figure}
+	\includegraphics[width=\textwidth]{images/mraky.png}
+	\captionof{figure}{Textura mraky.glsl}
+\end{figure}
+
+Jednoduchá a přesto slušně uvěřitelná textura mraků, které se navíc pohybují a mění. 
+
+Právě změna tvaru mraků je  na této textuře zajímavá. Tvar mraků je generovaný pomocí turbulence doplněné o posun závislý na čase v jedné ze složek.
   
 
 
 %---------------------------------------------------------------------------
 \chapter{Zvláštní použité znalosti}
+Pro generování alespoň trochu realistických textur je nutné mít k dispozici nějaký zdroj šumu, ideálně více než jeden druh. Ačkoliv se generování a vlastnostem šumu a náhodných jevů věnovalo na FIT hned několik předmětů, tak využití znalostí v těchto předmětech získaných bylo v tomto projektu poměrně obtížné. 
 
-Uveďte informace, které byly potřeba nad rámec výuky probírané na FIT.
-Vysvětlete je pomocí obrázků, schémat, vzorců apod. 
+Architektura grafických karet a vykreslovacího řetězce například dělá použití jednoduchých kongruentních generátorů šumu v praxi nemožné. Stejně tak je nereálné použití různých frekvenčních filtrů na šumových datech a získání různě frekvenčně omezených šumových signálů.
 
-\paragraph{Rozsah:} podle potřeby a vlastního uvážení
-
+Informace, které by byly užitečné pro tento projekt, přinesla až přednáška z předmětu Počítačová grafika, která se ale uskutečnila až příliš pozdě. Je ale pochopitelné, že z časových důvodů musí k něčemu takovému dojít.
 
 %---------------------------------------------------------------------------
 \chapter{Práce na projektu}
@@ -208,16 +203,6 @@ Co se týče samotného programování, tak nebylo jednoduché odhadnout, jak se
 \section{Zkušenosti získané řešením projektu}
 
 \begin{itemize}
-	\item 
-\end{itemize}
-
-Popište, co jste se řešením projektu naučili. Zahrňte dovednosti obecně
-programátorské, věci z oblasti počítačové grafiky, ale i spolupráci v týmu,
-hospodaření s časem, atd.
-
-\paragraph{Rozsah:} formulujte stručně, uchopte cca 3-5 věcí
-
-\begin{itemize}
 \item \textbf{\AuthorA}: Prohloubení znalostí o geometry shaderech, tangentních prosterech, normal mappingu a příjemné zjištění, že SDL2 je mnohem schopnější, než SDL1.2.
 \item \textbf{\AuthorB}:
 \item \textbf{\AuthorC}: Seznámení s jazykem GLSL, programování v něm, poznání čeho je schopen a práce přes VNC.
@@ -232,13 +217,15 @@ hospodaření s časem, atd.
 
 \paragraph{Vzhled vytvořeného řešení (75\%):} Estetická kvalita je přijatelná, ale rozhodně ne dokonalá. Bylo by možné ji vylepšit například lepším mapováním textur na zvolené modely.
 
-\paragraph{Využití zdrojů (60\%):} Bylo využito několik zdrojů týkajících se primárně generování šumu, a to jak kód, tak i teoretické základy. Obecně mohlo být zdrojů použito více.
+\paragraph{Využití zdrojů (60\%):} Bylo využito několik zdrojů týkajících se primárně generování šumu, a to jak kód, tak i teoretické základy. Zbytek aplikace byl vytvořen použitím intuice a představivosti. Obecně mohlo být zdrojů použito více.
 
-\paragraph{Hospodaření s časem (50-90\%):} Práce na projektu začala dokonce i dříve, než byl projekt oficiálně zaregistrován. I přesto byly činnosti přiřazené některým členům týmu dokončeny později, než bylo očekáváno. Ale i přesto je projekt dokončen a nemá žádné výrazné nedostatky.
+\paragraph{Hospodaření s časem (50-90\%, jak kdo):} Práce na projektu začala dokonce i dříve, než byl projekt oficiálně zaregistrován. I přesto byly činnosti přiřazené některým členům týmu dokončeny později, než bylo očekáváno. Navzdory tomu je projekt dokončen a nemá žádné výrazné nedostatky.
 
-\paragraph{Spolupráce v týmu (50\%):} Zdena a Tomáš se mohli míň flákat a aspoň si to rozjet :P. TODO DOPLNIT
+\paragraph{Spolupráce v týmu (50\%):} Ukázalo se, že tlačit Zdeňka Trettera a Tomáše Šujana do práce silněji by bylo rozumné. Jinak ale vše proběhlo bez problémů.
 
-\paragraph{Celkový dojem (50\%):} Práce na tomto projektu byla příjemnou zkušeností, a to primárně z toho důvodu, že se jednalo hlavně o artistickou činnost, u které je člověk omezen jenom svou představivostí. BLAH BLAH BLAH TODO.
+\paragraph{Celkový dojem (80\%):} Díky kreativní povaze tohoto projektu se jednalo o příjemnou novou zkušenost. Jelikož byly vlastnosti finálního produktu stanoveny velice volně, tak byl každý člen týmu omezen pouze svou představivostí. 
+
+Výsledná aplikace je dostatečně jednoduchá a zároveň dostatečně schopná na to, aby i člověk v oblasti generování procedurálních textur nezkušený byl schopný vyprodukovat nějaké výsledky.
 
 %---------------------------------------------------------------------------
 \chapter{Ovládání vytvořeného programu}
@@ -247,13 +234,13 @@ hospodaření s časem, atd.
 \paragraph{Softwarové púožadavky}
 \begin{itemize}
 	\item Knihovna SDL2 - Vytvoření a ovládání okna aplikace a OpenGL kontextu.
-	\item Knihovna GLEW - Nahrávání OpenGL funkcí
+	\item Knihovna GLEW - Nahrávání OpenGL funkcí.
 	\item Knihovna Open Asset Import Library - Nahrávání modelů.
 \end{itemize}
 
 \paragraph{Hardwarové požadavky}
 \begin{itemize}
-	\item Grafická karta s podporou alespoň OpenGL 3.3
+	\item Grafická karta s podporou alespoň OpenGL 3.3.
 \end{itemize}
 
 \section{Programy a služby použité při tvorbě}
@@ -263,12 +250,25 @@ hospodaření s časem, atd.
 
 \section{Obsluha programu}
 \begin{itemize}
-	\item Držení levého tlačítka myši - Společně s pohybem myši umožňuje rotaci modelu.
-	\item Kolečko myši - Přiblížení a oddálení modelu.
-	\item Klávesa F5 - Opětovné nahrání a zkompilování shaderů.
-	\item Klávesa R - Zapíná a vypíná autonomní rotaci modelu.
-	\item Klávesa T - Zapíná a vypíná zobrazení tangentního prostoru modelu.
-	\item Šipka doleva a doprava - Přepíná mezi texturovacími shadery.
+	\item Pohyb
+		\begin{itemize}
+			\item Levétlačítko myši - Držením tohoto tlačítka a pohybem myši lze rotovat se zobrazeným modelem.
+			\item Kolečko myši - Přiblížení a oddálení modelu.
+		\end{itemize}
+	\item Zobrazení
+		\begin{itemize}
+
+			\item Klávesa R - Zapíná a vypíná autonomní rotaci modelu.
+			\item Klávesa T - Zapíná a vypíná zobrazení tangentního prostoru modelu.
+			\item Klávesa A - Zapíná plné zobrazení textury, tj. včetně normálového mapování a osvětlení.
+			\item Klávesa S - Zapíná zobrazení pouze barevné složky textury.		\item Klávesa D - Zapíná zobrazení pouze normálové složky textury.
+			\item Klávesa F - Zapíná zobrazení pouze osvětlení.
+		\end{itemize}
+	\item Ostatní
+		\begin{itemize}
+			\item Klávesa F5 - Opětovné nahrání a zkompilování shaderů.
+			\item Šipky doleva a doprava - Přepíná mezi texturovacími shadery.
+		\end{itemize}
 \end{itemize}
 
 Soubor se zobrazovaným modelem je programu předán jako první parametr, ostatní parametry pak specifikují texturovací shadery, mezi kterými lze přepínat.
@@ -276,19 +276,20 @@ Soubor se zobrazovaným modelem je programu předán jako první parametr, ostat
 %---------------------------------------------------------------------------
 \chapter{Doporučení pro budoucí zadávání projektů}
 
-Co vám vyhovovalo a co nevyhovovalo na organizaci projektů? Které prvky by měly být zachovány, zesíleny, potlačeny, eliminovány?
+Témata projektů byla zadána dostatečně brzy a byl tak dostatek času pro zvolení toho správného. Taktéž termín odevzdání byl stanoven rozumně. 
+
+Zadání nebyla příliš striktní, což je určitě pozitivní.
 
 %---------------------------------------------------------------------------
 
-\chapter{Různé}
+%\chapter{Různé}
 
-Ještě něco by v dokumentaci mělo být? Napište to sem! Podle potřeby i založte
-novou kapitolu.
+%Ještě něco by v dokumentaci mělo být? Napište to sem! Podle potřeby i založte novou kapitolu.
 
 %---------------------------------------------------------------------------
 
 \bibliographystyle{plain}
-\nocite{gustavson2014,mcewan2012}
+\nocite{gustavson2014,mcewan2012,lengyel}
 \bibliography{reference}
 \addcontentsline{toc}{chapter}{Literatura}
 
