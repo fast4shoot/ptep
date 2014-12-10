@@ -27,6 +27,15 @@ float pcos(float x);
 // presune hodnotu x z rozsahu -1..1 do rozsahu 0..1
 float makePositive(float x);
 
+// linearni verze smoothstepu
+float linearsmoothstep(float edge0, float edge1, float x);
+vec2 linearsmoothstep(float edge0, float edge1, vec2 x);
+vec3 linearsmoothstep(float edge0, float edge1, vec3 x);
+vec4 linearsmoothstep(float edge0, float edge1, vec4 x);
+vec2 linearsmoothstep(vec2 edge0, vec2 edge1, vec2 x);
+vec3 linearsmoothstep(vec3 edge0, vec3 edge1, vec3 x);
+vec4 linearsmoothstep(vec4 edge0, vec4 edge1, vec4 x);
+
 float permute(float x);
 vec3 permute(vec3 x);
 vec4 permute(vec4 x);

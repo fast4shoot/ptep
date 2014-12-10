@@ -1,6 +1,9 @@
 #version 330
 
 uniform vec4 lightPos;
+uniform bool renderColor;
+uniform bool renderNormal;
+uniform bool renderLight;
 
 in VertexOutput
 {
@@ -47,10 +50,12 @@ void main()
 	
 	vec3 light = ambient * material.ambientAmt + diffuse * material.diffuseAmt + specular * material.specularAmt;
 	
-	outColor = vec4(material.color.rgb * light, material.color.a);
-	//outColor = vec4(normalize(material.normal) * 0.5 + vec3(0.5), material.color.a);
-	//outColor = vec4(normNormal * 0.5 + vec3(0.5), material.color.a);
-    //outColor = vec4(normTangent * 0.5 + vec3(0.5), material.color.a);
-    //outColor = vec4(normBitangent * 0.5 + vec3(0.5), material.color.a);
-	//outColor = vec4((cross(varTangent, varNormal) - varBitangent) * 0.5 + vec3(0.5), material.color.a);
+	if (renderColor)
+		outColor = material.color;
+	else if (renderNormal)
+		outColor = vec4(normalize(material.normal) * 0.5 + 0.5, 1.0);
+	else if (renderLight)
+		outColor = vec4(light, 1.0);
+	else
+		outColor = vec4(material.color.rgb * light, material.color.a);
 }

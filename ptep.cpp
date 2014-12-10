@@ -27,6 +27,14 @@
 #include "modelLoader.h"
 #include "shaderLoader.h"
 
+enum RenderMode
+{
+	ALL,
+	COLOR,
+	NORMAL,
+	LIGHT
+};
+
 int main(int argc, char** argv)
 {
 	if (argc < 3)
@@ -97,6 +105,7 @@ int main(int argc, char** argv)
 	bool rotate = true;
 	bool showTangent = false;
 	bool loadShaders = true;
+	RenderMode renderMode = ALL;
 	
 	auto ticks = SDL_GetTicks();
 	auto ticksDelta = 0;
@@ -152,16 +161,22 @@ int main(int argc, char** argv)
 					{
 						case SDLK_r: rotate = !rotate; break;
 						case SDLK_t: showTangent = !showTangent; break;
+						case SDLK_a: renderMode = ALL; break;
+						case SDLK_s: renderMode = COLOR; break;
+						case SDLK_d: renderMode = NORMAL; break;
+						case SDLK_f: renderMode = LIGHT; break;
+						
 						case SDLK_F5: loadShaders = true; break;
+						
 						case SDLK_LEFT: 
-							currentTextureIdx--; currentTextureIdx %= textureFilenames.size();
-							std::cout << "Přepínám na texturu " << textureFilenames[currentTextureIdx] << std::endl;
+							currentTextureIdx += textureFilenames.size() - 1; currentTextureIdx %= textureFilenames.size();
+							std::cout << "Přepínám na texturu " << textureFilenames[currentTextureIdx] << " s idx " << currentTextureIdx << std::endl;
 							loadShaders = true;
 							break;
 						
 						case SDLK_RIGHT: 
 							currentTextureIdx++; currentTextureIdx %= textureFilenames.size();
-							std::cout << "Přepínám na texturu " << textureFilenames[currentTextureIdx] << std::endl;
+							std::cout << "Přepínám na texturu " << textureFilenames[currentTextureIdx] << " s idx " << currentTextureIdx << std::endl;
 							loadShaders = false;
 							break;
 								
@@ -293,6 +308,20 @@ int main(int argc, char** argv)
 					{
 						glCall(glUniform1f, timeLocation, ticks * 0.001);
 					}
+				
+					// modifikatory dle RenderMode
+					auto renderColor = glCall(glGetUniformLocation, program, "renderColor");
+					auto renderNormal = glCall(glGetUniformLocation, program, "renderNormal");
+					auto renderLight = glCall(glGetUniformLocation, program, "renderLight");
+					
+					if (renderColor != 0)
+						glCall(glUniform1i, renderColor, renderMode == COLOR);
+				
+					if (renderNormal != 0)
+						glCall(glUniform1i, renderNormal, renderMode == NORMAL);
+						
+					if (renderLight != 0)
+						glCall(glUniform1i, renderLight, renderMode == LIGHT);
 				
 					for (int i = 0; i < 4; i++)
 						glCall(glEnableVertexAttribArray, i);

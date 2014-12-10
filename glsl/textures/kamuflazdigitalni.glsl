@@ -1,6 +1,6 @@
 Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 {
-	vec2 camoUv = floor(uv * 250) * 0.004;
+	vec2 camoUv = floor(uv * 100) * 0.01;
 	
 	vec3 barva0 = vec3(0.56, 0.61, 0.35);
 	vec3 barva1 = vec3(0.4, 0.31, 0.22);

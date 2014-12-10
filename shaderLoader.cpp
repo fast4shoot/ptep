@@ -103,6 +103,7 @@ GLuint createTextureProgram(const std::string& textureShaderSource)
 	fragmentShaders.push_back(readFile("glsl/textureCore/rotationMatrix.glsl"));
 	fragmentShaders.push_back(readFile("glsl/textureCore/positiveTrig.glsl"));
 	fragmentShaders.push_back(readFile("glsl/textureCore/rand.glsl"));
+	fragmentShaders.push_back(readFile("glsl/textureCore/linearsmoothstep.glsl"));
 	fragmentShaders.push_back(readFile("glsl/textureCore/frag.glsl"));
 	fragmentShaders.push_back(modifiedTextureShaderSource);
 	
