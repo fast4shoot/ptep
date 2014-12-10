@@ -98,7 +98,7 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv) {
         float v = uv.y;
         
         Material retmat;
-        retmat.shininess = 30.0; // odrazivost
+        retmat.shininess = 20.0; // odrazivost
         retmat.diffuseAmt = 1.0; // difuzna odrazivost
         retmat.ambientAmt = 0.3;
         
@@ -115,14 +115,14 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv) {
 		float color = 1.0 - 1.7 * res.x;
 		vec3 bledomodra = vec3(0.7, 0.8, 1.0);
 		
-		float normalaSum = makePositive(fbmGen(uv * 5));
+		float normalaSum = makePositive(fbmGen(uv * 10));
 		res.x += max(normalaSum * 0.5, 0);
 		
 		vec2 rotTestVektor = vec2(testVektor.x, -testVektor.y);
-		mat3 rotNormaly = rotationMatrix(vec3(rotTestVektor, 0.0), clamp(sqrt(res.x) * MOJE_PI * 0.5, 0, 0.3 * MOJE_PI));
+		mat3 rotNormaly = rotationMatrix(vec3(rotTestVektor, 0.0), clamp(sqrt(res.x) * MOJE_PI * 0.5, 0, 0.45 * MOJE_PI));
 		
 		retmat.color = vec4(farba * color * bledomodra, 1.0);
 		retmat.normal = rotNormaly * vec3(0.0,0.0,1.0);
-		retmat.specularAmt = 0.9 * (fbm + 1) * 0.7;
+		retmat.specularAmt = 0.5 * (fbm + 1) * 0.7;
 		return retmat;
  }

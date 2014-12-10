@@ -298,7 +298,7 @@ int main(int argc, char** argv)
 					auto lightPosLocation = glCall(glGetUniformLocation, program, "lightPos");
 					if (lightPosLocation != -1)
 					{
-						auto lightPos = glm::vec4(20.0f, 20.0f, 20.0f, 1.0f);
+						auto lightPos = glm::vec4(200.0f, 200.0f, 0.0f, 1.0f);
 						lightPos = view * lightPos;
 						glCall(glUniform4fv, lightPosLocation, 1, glm::value_ptr(lightPos));
 					}

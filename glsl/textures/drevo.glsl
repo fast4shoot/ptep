@@ -94,7 +94,7 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	ret.color = vec4(barva * 1.2, 1.0);// * (lokalniunorm);
 	ret.normal = normala;
 	//ret.normal = vec3(0.0, 0.0, 1.0);
-	ret.shininess = 3.0;
+	ret.shininess = 20.0;
 	ret.diffuseAmt = 1.0;
 	ret.specularAmt = 0.9;
 	ret.ambientAmt = 0.3;
