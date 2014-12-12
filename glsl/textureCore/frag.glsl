@@ -5,7 +5,7 @@ uniform bool renderColor;
 uniform bool renderNormal;
 uniform bool renderLight;
 
-in VertexOutput
+in VertexOUT
 {
 	vec4 position;
 	vec2 texCoord;
@@ -13,7 +13,7 @@ in VertexOutput
 	vec3 tangent;
 	vec3 bitangent;
 	float tanHandedness;
-} input;
+} IN;
 
 out vec4 outColor;
 
@@ -31,17 +31,17 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv);
 
 void main()
 {
-	Material material = getColorForPoint(input.position, input.normal, input.texCoord);
+	Material material = getColorForPoint(IN.position, IN.normal, IN.texCoord);
 	
-	vec3 normNormal = normalize(input.normal);
-	vec3 normTangent = normalize(input.tangent);
-	float normTanHandedness = sign(input.tanHandedness);
-	vec3 normBitangent = normalize(input.bitangent);
+	vec3 normNormal = normalize(IN.normal);
+	vec3 normTangent = normalize(IN.tangent);
+	float normTanHandedness = sign(IN.tanHandedness);
+	vec3 normBitangent = normalize(IN.bitangent);
 	mat3 tangentSpace = mat3(normTangent, normBitangent, normNormal);
 	vec3 modifiedNormal = tangentSpace * normalize(material.normal);
 	
-	vec3 eyeVec = normalize(-input.position.xyz);
-	vec3 lightVec = normalize(lightPos - input.position).xyz;
+	vec3 eyeVec = normalize(-IN.position.xyz);
+	vec3 lightVec = normalize(lightPos - IN.position).xyz;
 	vec3 halfwayVec = normalize(lightVec + eyeVec);
 	
 	vec3 ambient = vec3(1.0);

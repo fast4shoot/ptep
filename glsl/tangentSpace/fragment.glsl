@@ -3,11 +3,11 @@
 in GeometryToFragment
 {
 	vec3 color;
-} input;
+} IN;
 
 out vec4 outColor;
 
 void main()
 {
-	outColor = vec4(input.color, 1.0);
+	outColor = vec4(IN.color, 1.0);
 }

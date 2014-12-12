@@ -1,24 +1,5 @@
 #define SHARP_NOISE 0
- 
-/*float totallyRandomNoise(vec2 a) {
-  return (float)((rand(a) % 1000)/1000.0);
-}*/
- 
-float perlinNoise(float x, float y) {
-	
-	float alpha = 2.0, beta = 2.0, sum = 0.0, scale = 1.0, val;
-	int n = 12, i;
-	vec2 p = vec2(x, y); 
-	
-	for(i = 0; i < n; i++) {
-		
-		val = snoise(p);
-		sum += val / scale;
-		scale *= alpha;
-		p = p * beta;
-	}
-	return sum;
-}
+
  
 // Hodnoty periody zakladneho sinusu, urcuju uhol sklonu
 float xPerioda = 5.0;
@@ -44,10 +25,10 @@ float totalDiv = (1.0 / 2000.0);
 vec3 kamen = vec3(0.78, 0.75, 0.58);
 float MOJE_PI = 3.1415926535;
 
-vec2 cells(vec2 input, out vec2 vektor) {
+vec2 cells(vec2 uv, out vec2 vektor) {
 	
-		vec2 P = floor(input);
-		vec2 desCast = fract(input);
+		vec2 P = floor(uv);
+		vec2 desCast = fract(uv);
 		
 		vec4 desCastX = desCast.x + vec4(-0.5,-1.5,-0.5,-1.5);
 		vec4 desCastY = desCast.y + vec4(-0.5,-0.5,-1.5,-1.5);
@@ -56,7 +37,7 @@ vec2 cells(vec2 input, out vec2 vektor) {
 		vec4 pery = permute((P.y) + vec4(0.0,0.0,1.0,1.0));
 		
 		vec4 oX = mod(pery, 6.0) * (1.0/7.0) + (0.5/7.0);
-		vec4 oY = mod(floor(perx * (1.0/50.0)), .0) * (1.0/7.0) + (0.5/7.0);
+		vec4 oY = mod(floor(perx * (1.0/50.0)), 6.0) * (1.0/7.0) + (0.5/7.0);
 		
 		vec4 dX = desCastX + 1.2 * oX;
 		vec4 dY = desCastY + 0.8 * oY;

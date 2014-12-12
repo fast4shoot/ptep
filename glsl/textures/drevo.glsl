@@ -1,5 +1,5 @@
 float PI = 3.14159265358979323846264;
-float FREKVENCE = 2f;
+float FREKVENCE = 2;
 vec3 drevo = vec3(0.45, 0.227, 0.106);
 
 float generujUhelNormaly(float x)
@@ -9,7 +9,7 @@ float generujUhelNormaly(float x)
 
 float lokalniRozdeleniSegmentu(float segu, float segv)
 {
-	return rand(vec2(segu, segv * 17f)) * 0.8 + 0.1;
+	return rand(vec2(segu, segv * 17)) * 0.8 + 0.1;
 }
 
 float globalniRozdeleniSegmentu(float segu, float segv)
@@ -57,9 +57,9 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 	float globalnivdreva = globalniSpodek;
 	
 	vec3 modBarvy = vec3(
-		rand(vec2(segmentaceu * 654, globalniSpodek * 100.656f)) * 0.5, 
-		rand(vec2(segmentaceu * 0.57, globalniSpodek * 941.2f)) * 0.5, 
-		rand(vec2(segmentaceu * 9846, globalniSpodek * 80f))
+		rand(vec2(segmentaceu * 654, globalniSpodek * 100.656)) * 0.5, 
+		rand(vec2(segmentaceu * 0.57, globalniSpodek * 941.2)) * 0.5, 
+		rand(vec2(segmentaceu * 9846, globalniSpodek * 80))
 	);
 	modBarvy *= 0.2f;
 	modBarvy += 1.0f;
@@ -74,7 +74,7 @@ Material getColorForPoint(vec4 position, vec3 normal, vec2 uv)
 
 	float velikostSuku = rand(vec2(globalniudreva * 84, globalnivdreva * 9846)) * 5;
 	float existenceSuku = step(0.5f, rand(vec2(globalniudreva, globalnivdreva * 9846)));
-	float maskaSuku = (1f - step(0.01 * velikostSuku + rand(uv) * 0.02, modifikovanaVzdalenostSuku)) * existenceSuku;
+	float maskaSuku = (1 - step(0.01 * velikostSuku + rand(uv) * 0.02, modifikovanaVzdalenostSuku)) * existenceSuku;
 	
 	vec3 barva = modBarvy * mix(drevo, drevo * 0.85, maskaSuku);
 	

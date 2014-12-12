@@ -8,7 +8,7 @@ layout(location = 1) in vec2 inTexCoord;
 layout(location = 2) in vec3 inNormal;
 layout(location = 3) in vec4 inTangent;
 
-out VertexOutput
+out VertexOUT
 {
 	vec4 position;
 	vec2 texCoord;
@@ -16,19 +16,19 @@ out VertexOutput
 	vec3 tangent;
 	vec3 bitangent;
 	float tanHandedness;
-} output;
+} OUT;
 
 void applyPosition(vec4 position);
 
 void main()
-{;
-	output.position = mvMat * inPosition;
-	output.texCoord = inTexCoord;
-	output.normal = normalize(mat3(mvNormMat) * inNormal);
-	output.tanHandedness = inTangent.w;
-	output.tangent = normalize(mat3(mvNormMat) * inTangent.xyz) * -inTangent.w;
+{
+	OUT.position = mvMat * inPosition;
+	OUT.texCoord = inTexCoord;
+	OUT.normal = normalize(mat3(mvNormMat) * inNormal);
+	OUT.tanHandedness = inTangent.w;
+	OUT.tangent = normalize(mat3(mvNormMat) * inTangent.xyz) * -inTangent.w;
 	
-	output.bitangent = cross(output.normal, output.tangent) * output.tanHandedness;
+	OUT.bitangent = cross(OUT.normal, OUT.tangent) * OUT.tanHandedness;
 	
-	applyPosition(output.position);
+	applyPosition(OUT.position);
 }

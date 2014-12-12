@@ -20,6 +20,10 @@ float permute(float x) {
      return mod289(((x*34.0)+1.0)*x);
 }
 
+vec2 permute(vec2 x) {
+	return mod289(((x*34.0)+1.0)*x);
+}
+
 vec3 permute(vec3 x) {
 	return mod289(((x*34.0)+1.0)*x);
 }
